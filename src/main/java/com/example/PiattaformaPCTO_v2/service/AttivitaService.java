@@ -18,4 +18,7 @@ public interface AttivitaService {
 
 
     void uploadOpen(MultipartFile file);
+
+
+    void uploadGioco(MultipartFile file);
 }

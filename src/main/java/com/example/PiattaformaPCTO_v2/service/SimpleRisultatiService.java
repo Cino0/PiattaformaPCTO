@@ -261,8 +261,9 @@ public class SimpleRisultatiService implements RisultatiService{
             for(Risultati risultati: r){
                 XWPFParagraph paragraph = xwpfDocument.createParagraph();
                 XWPFRun run = paragraph.createRun();
-                //run.setColor("FF0000");
-                run.setText(risultati.getScuola().getNome());
+                Scuola sc=risultati.getScuola();
+                run.setText(sc.getNome()+" "+ sc.getRegione()+" "+sc.getCitta());
+                run.addBreak();
                 run.setText(" Totale iscritti all'università: ");
                 run.setText(String.valueOf(risultati.getIscritti().size()));
                 run.addBreak();

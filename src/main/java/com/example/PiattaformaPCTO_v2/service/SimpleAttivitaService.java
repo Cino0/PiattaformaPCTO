@@ -164,6 +164,46 @@ public class SimpleAttivitaService implements AttivitaService{
     }
 
     @Override
+    public void uploadGioco(MultipartFile file) {
+        Sheet dataSheet = this.fileOpenerHelper(file);
+        Iterator<Row> iterator = dataSheet.rowIterator();
+        iterator.next();
+       /* Row riga = iterator.next();
+        char[] c1 = riga.getCell(0).getStringCellValue().toCharArray();
+        int index=riga.getCell(0).getStringCellValue().indexOf(':');
+        int index2=riga.getCell(0).getStringCellValue().lastIndexOf(':');
+        for(int x=0;x<c1.length;x++){
+            if(c1[x]==':'){
+                System.out.println(x+"carattere dopo:"+c1[x+1]+"a");
+            }
+        }
+        System.out.println(index);
+        System.out.println(index2);
+        int index3=riga.getCell(0).getStringCellValue().indexOf('\n');
+        String nome= riga.getCell(0).getStringCellValue().substring(index+2,index3);
+        String cognome = riga.getCell(0).getStringCellValue().substring(index2+2,riga.getCell(0).getStringCellValue().length());
+        System.out.println(nome+" "+cognome);*/
+        int riga=1;
+        while (iterator.hasNext()){
+            Row r = iterator.next();
+
+            if(!r.getCell(0).getStringCellValue().isEmpty()){
+                System.out.println(r.getCell(0).getStringCellValue());
+                int finale = r.getCell(0).getStringCellValue().length();
+                int inizioNome = (r.getCell(0).getStringCellValue().indexOf(':'))+2;
+                int inizioCognome = (r.getCell(0).getStringCellValue().lastIndexOf(':'))+2;
+                int fineNome = r.getCell(0).getStringCellValue().indexOf('\n');
+                String nome = r.getCell(0).getStringCellValue().substring(inizioNome,fineNome);
+                String cognome = r.getCell(0).getStringCellValue().substring(inizioCognome,finale);
+                System.out.println("inzio:"+inizioNome+" fine:"+fineNome+" inizio:"+inizioCognome+" fine:"+finale);
+                System.out.println(nome+" "+cognome);
+                System.out.println(riga);
+                riga++;
+            }
+        }
+    }
+
+    @Override
     public Sheet fileOpenerHelper(MultipartFile file) {
         try {
             Path tempDir = Files.createTempDirectory("");
