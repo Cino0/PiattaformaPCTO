@@ -6,10 +6,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UniversitariRepository extends MongoRepository<Universitario,String> {
-
-
+public interface UniversitarioRepository extends MongoRepository<Universitario, String> {
     @Query("{'nome': ?0,'cognome': ?1,'comuneScuola':?2}")
-    Universitario findByNomeAndCognomeAndComuneScuola(String nome,String cognome,String citta);
-
+    Universitario findByNomeAndCognomeAndComuneScuola(String nome, String cognome, String citta);
 }
