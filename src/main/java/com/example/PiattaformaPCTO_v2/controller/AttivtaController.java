@@ -45,4 +45,19 @@ public class AttivtaController {
     public void uploadGioco(@RequestParam("file") MultipartFile file){
         attivitaService.uploadGioco(file);
     }
+
+
+    @PostMapping("/a")
+    public void uploadG(@RequestParam("file") MultipartFile file){
+        attivitaService.uploadG(file);
+    }
+
+
+    @GetMapping("/crea")
+    public void creaPdf(){
+        attivitaService.creaPdf();
+    }
+
+
+
 }

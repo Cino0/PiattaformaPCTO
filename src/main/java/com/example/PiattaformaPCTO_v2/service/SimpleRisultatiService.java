@@ -2,6 +2,7 @@ package com.example.PiattaformaPCTO_v2.service;
 
 import com.example.PiattaformaPCTO_v2.collection.*;
 import com.example.PiattaformaPCTO_v2.repository.AttivitaRepository;
+import com.example.PiattaformaPCTO_v2.repository.ScuolaRepository;
 import com.example.PiattaformaPCTO_v2.repository.UniversitariRepository;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,6 +28,8 @@ public class SimpleRisultatiService implements RisultatiService{
 
     @Autowired
     private UniversitariRepository universitariRepository;
+    @Autowired
+    private ScuolaRepository scuolaRepository;
 
     @Override
     public void crea() {
@@ -38,10 +40,11 @@ public class SimpleRisultatiService implements RisultatiService{
         List<Risultati> r = new ArrayList<>();
 
         //Scorro la lista delle attività presenti, da miglirare anche con un for each
-        for (int i=0;i<attivita.size();i++){
+        for (int i=0;i<attivita.size()-1;i++){
+
             //ottengo il nome dell'attività
             String nome= attivita.get(i).getNome();
-            System.out.println(nome);
+            //System.out.println(nome);
 
             // dalla singola attività ottengo la lista degli studenti partecipanti
             List<Studente> stud= attivita.get(i).getStudPartecipanti();
@@ -54,7 +57,7 @@ public class SimpleRisultatiService implements RisultatiService{
                 // Prendo l'id, si puo collassare in una dichiarazione sola
                 String scuola= s.getIdScuola();
 
-                //Utilizzo  il metodo per ottenere l'indice in cui inserire la scuola
+                //Utilizzo il metodo per ottenere l'indice in cui inserire la scuola
                 int index=this.scuoleHelperd(r,scuola);
                 // nel caso la scuola sia presente
                 if (index!=-1){
@@ -90,28 +93,133 @@ public class SimpleRisultatiService implements RisultatiService{
                     String citta= studi.getScuola().getCitta().toUpperCase();
                     Universitario uni =universitariRepository.findByNomeAndCognomeAndComuneScuola(nome,cognome,citta);
                     if(uni!=null){
-                        System.out.println(uni.getCognome()+"   "+uni.getScuolaProv());
+                        //System.out.println(uni.getCognome()+"   "+uni.getScuolaProv());
                         r.get(y).getAttivita().get(b).nuovoIscritto(studi);
                         if(this.studenteHelper(r,studi)==0){
                             r.get(y).nuovoIscritto(studi);
-
                         }
 
                     }
                 }
             }
         }
-        for (Risultati risultati: r){
+        risultatiInf(attivita,r);
+        /*or (Risultati risultati: r){
             for (Studente s : risultati.getIscritti()){
                 System.out.println(s.toString());
             }
-        }
+        }*/
         //this.creaRisultato(r);
         //this.createexcl(r);
         this.createword(r);
     }
 
+    @Override
+    public void risultatiInf(List<Attivita> attivita, List<Risultati> r) {
+        Attivita att = attivita.get(4);
+        String nome = att.getNome();
+        for (Studente s : att.getStudPartecipanti()){
+            Universitario uni = universitariRepository.findByNomeAndCognome(s.getNome().toUpperCase(),s.getCognome().toUpperCase());
+            if(uni!= null){
+                System.out.println(s.toString());
+                Scuola scuola = findScuola(uni.getComuneScuola(), uni.getScuolaProv());
+                s.setScuola(scuola);
+                int index=this.scuoleHelperd(r,scuola.getIdScuola());
+                if (index!=-1){
+                    int a=this.attivitaHelper(r.get(index).getAttivita(),nome);
+                    if (a!=-1){
+                        System.out.println("Prima "+r.get(index).getAttivita().get(a).getIscritti().size());
+                        r.get(index).getAttivita().get(a).getPartecipanti().add(s);
+                        r.get(index).getAttivita().get(a).nuovoIscritto(s);
+                        System.out.println("Dopo "+r.get(index).getAttivita().get(a).getIscritti().size());
+                        if(this.studenteHelper(r,s)==0){
+                            r.get(index).nuovoIscritto(s);
+                        }
+                    }else{
+                        System.out.println(" "+r.get(index).getAttivita().get(0).getIscritti().size());
+                        Presenza p = new Presenza(nome);
+                        p.getPartecipanti().add(s);
+                        p.nuovoIscritto(s);
+                        r.get(index).getAttivita().add(p);
+                        System.out.println("Dopo "+r.get(index).getAttivita().get(0).getIscritti().size());
+                        if (this.studenteHelper(r,s)==0){
+                            r.get(index).nuovoIscritto(s);
+                        }
+                    }
+                }else{
+                    Presenza p = new Presenza(nome);
+                    Risultati res = new Risultati("21/22",scuola);
+                    p.getPartecipanti().add(s);
+                    p.nuovoIscritto(s);
+                    res.getAttivita().add(p);
+                    res.nuovoIscritto(s);
+                    r.add(res);
+                }
+            }
+        }
 
+       /*System.out.println("entra");
+        List<Attivita> atti =attivitaRepository.findAll();
+        Attivita a = atti.get(4);
+        for (Studente s :a.getStudPartecipanti()){
+            Universitario uni = universitariRepository.findByNomeAndCognome(s.getNome().toUpperCase(),s.getCognome().toUpperCase());
+           if(uni!= null){
+                System.out.println("uno c'e");
+                System.out.println(uni.toString());
+                Scuola scuola = findScuola(uni.getComuneScuola(), uni.getScuolaProv());
+               System.out.println(scuola.toString());
+            }
+        }*/
+
+    }
+
+
+
+    private Scuola findScuola(String citta, String scuola){
+        List<Scuola> scuole = scuolaRepository.getScuolaByCitta(citta);
+        List<String> nomi = new ArrayList<>();
+        for (Scuola s : scuole){
+            nomi.add(s.getNome());
+        }
+        return  scuolaRepository.getScuolaByNome(findMostSimilarString(scuola,nomi));
+    }
+
+
+
+    public  String findMostSimilarString(String input, @org.jetbrains.annotations.NotNull List<String> strings) {
+        String mostSimilarString = "";
+        int minDistance = Integer.MAX_VALUE;
+        for (String str : strings) {
+            int distance = levenshteinDistance(input, str);
+            if (distance < minDistance) {
+                minDistance = distance;
+                mostSimilarString = str;
+            }
+        }
+        return mostSimilarString;
+    }
+
+    private  int levenshteinDistance(String s1, String s2) {
+        int m = s1.length();
+        int n = s2.length();
+        int[][] dp = new int[m+1][n+1];
+        for (int i = 0; i <= m; i++) {
+            dp[i][0] = i;
+        }
+        for (int j = 0; j <= n; j++) {
+            dp[0][j] = j;
+        }
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (s1.charAt(i-1) == s2.charAt(j-1)) {
+                    dp[i][j] = dp[i-1][j-1];
+                } else {
+                    dp[i][j] = 1 + Math.min(dp[i-1][j-1], Math.min(dp[i-1][j], dp[i][j-1]));
+                }
+            }
+        }
+        return dp[m][n];
+    }
     /**
      * Metodo che controlla se una scuola è presente all'interno della lista dei risultati
      * @param res la lista dei risultati
@@ -222,10 +330,6 @@ public class SimpleRisultatiService implements RisultatiService{
             sheet.createRow(i+1);
             sheet.getRow(i+1).createCell(0).setCellValue(r.get(i).getScuola().getNome());
             sheet.getRow(i+1).createCell(1).setCellValue(r.get(i).getIscritti().size());
-            /*for (int x = 0;x<r.get(i).getIscritti().size();x++){
-                String stud = r.get(i).getIscritti().get(x).getNome()+" "+r.get(i).getIscritti().get(x).getCognome();
-                sheet.getRow(i+1).createCell(x+2).setCellValue(stud);
-            }*/
             for (int x = 0;x<r.get(i).getAttivita().size();x++){
                 sheet.getRow(i+1).createCell(index).setCellValue(r.get(i).getAttivita().get(x).getNomeAttivita());
                 sheet.getRow(i+1).createCell(index+1).setCellValue(r.get(i).getAttivita().get(x).getIscritti().size());
@@ -245,8 +349,11 @@ public class SimpleRisultatiService implements RisultatiService{
 
     private int studenteHelper(List<Risultati> risultati,Studente studente){
         for (Risultati r : risultati){
-            if (r.getIscritti().contains(studente)){
-                return -1;
+            for (Studente s : r.getIscritti()){
+                if (s.getNome().toUpperCase().equals(studente.getNome().toUpperCase())&&
+                s.getCognome().toUpperCase().equals(studente.getCognome().toUpperCase())){
+                    return -1;
+                }
             }
         }
         return 0;
@@ -255,38 +362,62 @@ public class SimpleRisultatiService implements RisultatiService{
 
     private void createword(List<Risultati>r){
         XWPFDocument xwpfDocument = new XWPFDocument();
-        String filepath="src/main/resources/Risultati.docx";
+        XWPFDocument nonIscr = new XWPFDocument();
+        String filepath="src/main/resources/Iscritti.docx";
+        String file2 ="src/main/resources/NonIscritti.docx";
         try {
             FileOutputStream fileOutputStream =new FileOutputStream(filepath);
+            FileOutputStream fileOutputNon = new FileOutputStream(file2);
             for(Risultati risultati: r){
-                XWPFParagraph paragraph = xwpfDocument.createParagraph();
-                XWPFRun run = paragraph.createRun();
-                Scuola sc=risultati.getScuola();
-                run.setText(sc.getNome()+" "+ sc.getRegione()+" "+sc.getCitta());
-                run.addBreak();
-                run.setText(" Totale iscritti all'università: ");
-                run.setText(String.valueOf(risultati.getIscritti().size()));
-                run.addBreak();
-                for(Presenza p : risultati.getAttivita()){
-                    run.setText(p.getNomeAttivita());
-                    run.setText(" Partecipanti : ");
-                    run.setText(String.valueOf(p.getPartecipanti().size()));
-                    run.setText(" Iscritti: ");
-                    run.setText(String.valueOf(p.getIscritti().size()));
+                if(risultati.getIscritti().size()>0){
+                    XWPFParagraph paragraph = xwpfDocument.createParagraph();
+                    XWPFRun run = paragraph.createRun();
+                    Scuola sc=risultati.getScuola();
+                    run.setText(sc.getNome()+" "+ sc.getRegione()+" "+sc.getCitta());
                     run.addBreak();
-                }
-                run.setText("Elenco iscritti: ");
-                run.addBreak();
-                for (Studente s:risultati.getIscritti()){
-                    run.setText(s.getNome()+" "+s.getCognome());
+                    run.setText(" Totale iscritti all'università: ");
+                    run.setText(String.valueOf(risultati.getIscritti().size()));
                     run.addBreak();
+                    for(Presenza p : risultati.getAttivita()){
+                        run.setText(p.getNomeAttivita());
+                        run.setText(" Partecipanti : ");
+                        run.setText(String.valueOf(p.getPartecipanti().size()));
+                        run.setText(" Iscritti: ");
+                        run.setText(String.valueOf(p.getIscritti().size()));
+                        run.addBreak();
+                    }
+                    run.setText("Elenco iscritti: ");
+                    run.addBreak();
+                    for (Studente s:risultati.getIscritti()){
+                        run.setText(s.getNome()+" "+s.getCognome());
+                        run.addBreak();
+                    }
+                    run.addBreak();
+                }else{
+                    XWPFParagraph paragraph2 = nonIscr.createParagraph();
+                    XWPFRun run2 = paragraph2.createRun();
+                    Scuola sc=risultati.getScuola();
+                    run2.setText(sc.getNome()+" "+ sc.getRegione()+" "+sc.getCitta());
+                    run2.addBreak();
+                    for(Presenza p : risultati.getAttivita()){
+                        run2.setText(p.getNomeAttivita());
+                        run2.setText(" Partecipanti : ");
+                        run2.setText(String.valueOf(p.getPartecipanti().size()));
+                        run2.addBreak();
+                        run2.addBreak();
+                    }
                 }
-                run.addBreak();
             }
             xwpfDocument.write(fileOutputStream);
             xwpfDocument.close();
+            nonIscr.write(fileOutputNon);
+            nonIscr.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
+
+
+
+
 }

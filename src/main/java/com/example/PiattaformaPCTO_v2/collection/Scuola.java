@@ -4,11 +4,13 @@ package com.example.PiattaformaPCTO_v2.collection;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Builder
+@NoArgsConstructor
 @Document(collection = "Scuole")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Scuola {
@@ -35,6 +37,9 @@ public class Scuola {
         this.tipo = tipo;
     }
 
+    public Scuola(String nome) {
+        this.nome = nome;
+    }
 
     @Override
     public String toString() {

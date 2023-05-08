@@ -21,4 +21,11 @@ public interface AttivitaService {
 
 
     void uploadGioco(MultipartFile file);
+
+
+    void uploadG(MultipartFile file);
+
+
+    void creaPdf();
+
 }

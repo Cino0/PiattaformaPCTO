@@ -16,4 +16,7 @@ public class RisultatiController {
     public void crea(){
         risultatiService.crea();
     }
+
+
+
 }
