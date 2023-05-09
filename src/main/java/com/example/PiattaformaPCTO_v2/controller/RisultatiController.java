@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/risultati")
 public class RisultatiController {
-
     @Autowired
     private RisultatiService risultatiService;
 
@@ -17,6 +16,8 @@ public class RisultatiController {
         risultatiService.crea();
     }
 
-
-
+    @RequestMapping("/createStudentsFromActivities")
+    public void createStudentsFromActivities(){
+        this.risultatiService.createStudentsFromActivities();
+    }
 }
