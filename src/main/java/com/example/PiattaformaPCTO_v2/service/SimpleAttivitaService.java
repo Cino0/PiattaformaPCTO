@@ -4,11 +4,13 @@ import com.example.PiattaformaPCTO_v2.collection.Attivita;
 import com.example.PiattaformaPCTO_v2.collection.Scuola;
 import com.example.PiattaformaPCTO_v2.collection.Studente;
 import com.example.PiattaformaPCTO_v2.collection.Universitario;
+import com.example.PiattaformaPCTO_v2.dto.ActivityViewDTOPair;
 import com.example.PiattaformaPCTO_v2.repository.AttivitaRepository;
 import com.example.PiattaformaPCTO_v2.repository.ScuolaRepository;
-import com.example.PiattaformaPCTO_v2.repository.UniversitariRepository;
+import com.example.PiattaformaPCTO_v2.repository.UniversitarioRepository;
 import fr.opensagres.poi.xwpf.converter.pdf.PdfConverter;
 import fr.opensagres.poi.xwpf.converter.pdf.PdfOptions;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -20,27 +22,30 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageSz;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSectPr;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 @Service
-public class SimpleAttivitaService implements AttivitaService{
+public class SimpleAttivitaService implements AttivitaService {
 
     @Autowired
     private AttivitaRepository attivitaRepository;
 
+    /**
+     * Universitario repository instance.
+     */
     @Autowired
-    private ScuolaRepository scuolaRepository;
+    private UniversitarioRepository universitarioRepository;
 
     @Autowired
-    private UniversitariRepository universitariRepository;
+    private ScuolaRepository scuolaRepository;
 
     private ScuolaHelperService scuolaHelperService;
 
@@ -51,28 +56,28 @@ public class SimpleAttivitaService implements AttivitaService{
 
     @Override
     public void upload() {
-        String filePath ="src/main/resources/Progetto-NERD-2021-2022.xlsx";
+        String filePath = "src/main/resources/Progetto-NERD-2021-2022.xlsx";
         System.out.println(filePath);
         try {
             FileInputStream excel = new FileInputStream(new File(filePath));
-            File file= new File(filePath);
-            String name= FilenameUtils.removeExtension(file.getName());
-            Attivita attivita= new Attivita(name,4043);
+            File file = new File(filePath);
+            String name = FilenameUtils.removeExtension(file.getName());
+            Attivita attivita = new Attivita(name, 4043, new ArrayList<>());
             System.out.println(filePath);
             Workbook workbook = new XSSFWorkbook(excel);
             Sheet dataSheet = workbook.getSheetAt(0);
             Iterator<Row> iterator = dataSheet.rowIterator();
             iterator.next();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 Row riga = iterator.next();
-                if(riga.getCell(3)!=null){
+                if (riga.getCell(3) != null) {
                     Scuola scuola = scuolaRepository.getScuolaByNome(riga.getCell(8).getStringCellValue());
-                    if (scuola!=null){
-                        String nome=riga.getCell(3).getStringCellValue();
-                        String cognome=riga.getCell(4).getStringCellValue();
-                        String id= nome + cognome+scuola.getNome();
-                        Studente stud = new Studente(id,nome,cognome,scuola);
-                        System.out.println(stud.toString());
+                    if (scuola != null) {
+                        String nome = riga.getCell(3).getStringCellValue();
+                        String cognome = riga.getCell(4).getStringCellValue();
+                        String id = nome + cognome + scuola.getNome();
+                        Studente stud = new Studente(id, nome, cognome, scuola);
+                        System.out.println(stud);
                         attivita.getStudPartecipanti().add(stud);
                         System.out.println(attivita.getStudPartecipanti().size());
                     }
@@ -87,28 +92,28 @@ public class SimpleAttivitaService implements AttivitaService{
 
     @Override
     public void uploadSummer() {
-        String filePath ="src/main/resources/SummerSchoolSTEMPartecipanti.xlsx";
+        String filePath = "src/main/resources/SummerSchoolSTEMPartecipanti.xlsx";
         System.out.println(filePath);
         try {
             FileInputStream excel = new FileInputStream(new File(filePath));
-            File file= new File(filePath);
-            String name= FilenameUtils.removeExtension(file.getName());
-            Attivita attivita= new Attivita(name,4043);
+            File file = new File(filePath);
+            String name = FilenameUtils.removeExtension(file.getName());
+            Attivita attivita = new Attivita(name, 4043, new ArrayList<>());
             Workbook workbook = new XSSFWorkbook(excel);
             Sheet dataSheet = workbook.getSheetAt(0);
             Iterator<Row> iterator = dataSheet.rowIterator();
             iterator.next();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 Row riga = iterator.next();
-                if(riga.getCell(1) != null){
+                if (riga.getCell(1) != null) {
                     Scuola scuola = scuolaRepository.getScuolaById(riga.getCell(4).getStringCellValue());
-                    if(scuola!=null){
+                    if (scuola != null) {
                         //System.out.println(scuola.toString());
                         //System.out.println(riga.getCell(1).getStringCellValue());
-                        String nome=riga.getCell(1).getStringCellValue();
-                        String cognome=riga.getCell(2).getStringCellValue();
-                        String id= nome + cognome+scuola.getNome();
-                        Studente stud = new Studente(id,nome,cognome,scuola);
+                        String nome = riga.getCell(1).getStringCellValue();
+                        String cognome = riga.getCell(2).getStringCellValue();
+                        String id = nome + cognome + scuola.getNome();
+                        Studente stud = new Studente(id, nome, cognome, scuola);
                         //System.out.println(stud.toString());
                         attivita.getStudPartecipanti().add(stud);
                     }
@@ -123,29 +128,29 @@ public class SimpleAttivitaService implements AttivitaService{
 
     @Override
     public void uploadCartel() {
-        String filePath ="src/main/resources/Cartel1.xlsx";
+        String filePath = "src/main/resources/Cartel1.xlsx";
         System.out.println(filePath);
         try {
             FileInputStream excel = new FileInputStream(new File(filePath));
-            File file= new File(filePath);
-            String name= FilenameUtils.removeExtension(file.getName());
-            Attivita attivita= new Attivita(name,4043);
+            File file = new File(filePath);
+            String name = FilenameUtils.removeExtension(file.getName());
+            Attivita attivita = new Attivita(name, 4043, new ArrayList<>());
             Workbook workbook = new XSSFWorkbook(excel);
             Sheet dataSheet = workbook.getSheetAt(0);
             Iterator<Row> iterator = dataSheet.rowIterator();
             iterator.next();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 Row row = iterator.next();
-               if(row.getCell(0)!=null){
-                   Scuola scuola = scuolaRepository.getScuolaById(row.getCell(2).getStringCellValue());
-                  // System.out.println(scuola.toString());
-                   String nome=row.getCell(0).getStringCellValue();
-                   String cognome=row.getCell(1).getStringCellValue();
-                   String id= nome + cognome+scuola.getNome();
-                   Studente stud = new Studente(id,nome,cognome,scuola);
-                   System.out.println(stud.toString());
-                   attivita.getStudPartecipanti().add(stud);
-               }
+                if (row.getCell(0) != null) {
+                    Scuola scuola = scuolaRepository.getScuolaById(row.getCell(2).getStringCellValue());
+                    // System.out.println(scuola.toString());
+                    String nome = row.getCell(0).getStringCellValue();
+                    String cognome = row.getCell(1).getStringCellValue();
+                    String id = nome + cognome + scuola.getNome();
+                    Studente stud = new Studente(id, nome, cognome, scuola);
+                    System.out.println(stud);
+                    attivita.getStudPartecipanti().add(stud);
+                }
             }
             System.out.println(this.save(attivita));
         } catch (IOException e) {
@@ -157,19 +162,19 @@ public class SimpleAttivitaService implements AttivitaService{
 
     @Override
     public void uploadOpen(MultipartFile file) {
-        Attivita attivita= new Attivita("Open2022",4043);
-        Sheet dataSheet= this.fileOpenerHelper(file);
+        Attivita attivita = new Attivita("Open2022", 4043, new ArrayList<>());
+        Sheet dataSheet = this.fileOpenerHelper(file);
         Iterator<Row> iterator = dataSheet.rowIterator();
         iterator.next();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             Row row = iterator.next();
             //System.out.println(row.getCell(3).getStringCellValue());
             Scuola scuola = scuolaRepository.getScuolaByNome(row.getCell(3).getStringCellValue());
-            String nome=row.getCell(0).getStringCellValue();
-            String cognome=row.getCell(1).getStringCellValue();
-            String id= nome + cognome+scuola.getNome();
-            Studente stud = new Studente(id,nome,cognome,scuola);
-           // System.out.println(stud.toString());
+            String nome = row.getCell(0).getStringCellValue();
+            String cognome = row.getCell(1).getStringCellValue();
+            String id = nome + cognome + scuola.getNome();
+            Studente stud = new Studente(id, nome, cognome, scuola);
+            // System.out.println(stud.toString());
             attivita.getStudPartecipanti().add(stud);
 
         }
@@ -178,39 +183,44 @@ public class SimpleAttivitaService implements AttivitaService{
 
     @Override
     public void uploadGioco(MultipartFile file) {
-        Attivita attivita = new Attivita("InformaticaXGioco",4043);
+        Attivita attivita = new Attivita("InformaticaXGioco", 4043);
         Sheet dataSheet = this.fileOpenerHelper(file);
         Iterator<Row> iterator = dataSheet.rowIterator();
         iterator.next();
-        Scuola s =new Scuola("xxx","Scuolax","MARCHE","FERMO","PSE","LICEO");
-        while (iterator.hasNext()){
+        Scuola s = new Scuola("xxx", "Scuolax", "MARCHE", "FERMO", "PSE", "LICEO");
+        while (iterator.hasNext()) {
             Row r = iterator.next();
-            if(!r.getCell(0).getStringCellValue().isEmpty()){
+            if (!r.getCell(0).getStringCellValue().isEmpty()) {
                 int finale = r.getCell(0).getStringCellValue().length();
-                int inizioNome = (r.getCell(0).getStringCellValue().indexOf(':'))+2;
-                int inizioCognome = (r.getCell(0).getStringCellValue().lastIndexOf(':'))+2;
+                int inizioNome = (r.getCell(0).getStringCellValue().indexOf(':')) + 2;
+                int inizioCognome = (r.getCell(0).getStringCellValue().lastIndexOf(':')) + 2;
                 int fineNome = r.getCell(0).getStringCellValue().indexOf('\n');
-                String nome = r.getCell(0).getStringCellValue().substring(inizioNome,fineNome);
-                String cognome = r.getCell(0).getStringCellValue().substring(inizioCognome,finale);
-                String id= nome+cognome+ s.getNome();
-                Studente stud = new Studente(id,nome,cognome,s);
+                String nome = r.getCell(0).getStringCellValue().substring(inizioNome, fineNome);
+                String cognome = r.getCell(0).getStringCellValue().substring(inizioCognome, finale);
+                String id = nome + cognome + s.getNome();
+                Studente stud = new Studente(id, nome, cognome, s);
                 attivita.getStudPartecipanti().add(stud);
-                System.out.println(stud.toString());
+                System.out.println(stud);
             }
         }
 
         System.out.println(this.save(attivita));
     }
 
+    /**
+     * Find information about students that chose UNICAM and their high school, given an activity.
+     *
+     * @return list of activity view pairs
+     */
     @Override
     public void uploadG(MultipartFile file) {
         Sheet dataSheet = this.fileOpenerHelper(file);
         Iterator<Row> iterator = dataSheet.rowIterator();
         iterator.next();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             Row r = iterator.next();
-            if(!r.getCell(0).getStringCellValue().equals("Nome e Cognome")){
-                if(r.getCell(1)!=null){
+            if (!r.getCell(0).getStringCellValue().equals("Nome e Cognome")) {
+                if (r.getCell(1) != null) {
                     System.out.println("ciao");
                 }
             } else {
@@ -251,10 +261,10 @@ public class SimpleAttivitaService implements AttivitaService{
         //necessary for Libreoffice/Openoffice and PdfConverter to accept the column widths.
         //values are in unit twentieths of a point (1/1440 of an inch)
         //first column = 2 inches width
-        table.getCTTbl().addNewTblGrid().addNewGridCol().setW(BigInteger.valueOf(2*1440));
+        table.getCTTbl().addNewTblGrid().addNewGridCol().setW(BigInteger.valueOf(2 * 1440));
         //other columns (2 in this case) also each 2 inches width
-        for (int col = 1 ; col < 3; col++) {
-            table.getCTTbl().getTblGrid().addNewGridCol().setW(BigInteger.valueOf(2*1440));
+        for (int col = 1; col < 3; col++) {
+            table.getCTTbl().getTblGrid().addNewGridCol().setW(BigInteger.valueOf(2 * 1440));
         }
 
         //create second row
@@ -316,11 +326,11 @@ public class SimpleAttivitaService implements AttivitaService{
             throw new RuntimeException(e);
         }
         PdfOptions options = PdfOptions.create();
-        PdfConverter converter = (PdfConverter)PdfConverter.getInstance();
+        PdfConverter converter = (PdfConverter) PdfConverter.getInstance();
         try {
             String fileout = "src/main/resources/esempio1.pdf";
             FileOutputStream outp = new FileOutputStream(new File(fileout));
-            converter.convert(document,outp, options);
+            converter.convert(document, outp, options);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -360,8 +370,19 @@ public class SimpleAttivitaService implements AttivitaService{
     }
 
 
-
-
+    @Override
+    public List<ActivityViewDTOPair> findStudentsFromActivity(String activityName) {
+        List<ActivityViewDTOPair> result = new ArrayList<>();
+        Attivita activity = this.attivitaRepository.findByNome(activityName);
+        activity.getStudPartecipanti().forEach(s -> {
+            Universitario u = this.universitarioRepository.findByNomeAndCognomeAndComuneScuola(
+                    s.getNome().toUpperCase(), s.getCognome().toUpperCase(), s.getScuola().getCitta().toUpperCase());
+            if (u != null)
+                result.add(new ActivityViewDTOPair(u, this.scuolaRepository.getScuolaByNomeContainingAndAndCitta(
+                        s.getScuola().getNome(), u.getComuneScuola())));
+        });
+        return result;
+    }
 
     @Override
     public Sheet fileOpenerHelper(MultipartFile file) {
@@ -369,16 +390,13 @@ public class SimpleAttivitaService implements AttivitaService{
             Path tempDir = Files.createTempDirectory("");
             File tempFile = tempDir.resolve(file.getOriginalFilename()).toFile();
             file.transferTo(tempFile);
-            Workbook workbook  = new XSSFWorkbook(tempFile);
+            Workbook workbook = new XSSFWorkbook(tempFile);
             Sheet dataSheet = workbook.getSheetAt(0);
             return dataSheet;
         } catch (IOException | InvalidFormatException e) {
             throw new RuntimeException(e);
         }
     }
-
-
-
 
 
 }

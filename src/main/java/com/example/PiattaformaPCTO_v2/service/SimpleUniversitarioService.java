@@ -1,7 +1,7 @@
 package com.example.PiattaformaPCTO_v2.service;
 
 import com.example.PiattaformaPCTO_v2.collection.Universitario;
-import com.example.PiattaformaPCTO_v2.repository.UniversitariRepository;
+import com.example.PiattaformaPCTO_v2.repository.UniversitarioRepository;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -15,14 +15,14 @@ import java.io.IOException;
 import java.util.Iterator;
 
 @Service
-public class SimpleUniversitarioService implements UniversitariService{
+public class SimpleUniversitarioService implements UniversitarioService {
 
 
     @Autowired
-    private UniversitariRepository universitariRepository;
+    private UniversitarioRepository universitarioRepository;
     @Override
     public String save(Universitario universitario) {
-        return universitariRepository.save(universitario).getNome();
+        return universitarioRepository.save(universitario).getNome();
     }
 
     @Override

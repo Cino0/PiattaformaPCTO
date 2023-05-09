@@ -11,4 +11,6 @@ public interface RisultatiService {
 
     void risultatiInf(List<Attivita> attivita, List<Risultati> risultati);
 
+
+    void createStudentsFromActivities();
 }
