@@ -23,5 +23,7 @@ public class Professore {
     private String email;
 
     private Scuola scuolaImp;
-
+    
+    private String citta;
+    private String attivita;
 }
