@@ -15,6 +15,9 @@ import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import com.example.PiattaformaPCTO_v2.collection.Professore;
+import com.google.gson.Gson;
+
 public class DocenteService {
     private String pathFile = "src\\main\\resources\\Docenti_attivita.xlsx";
     private String[][] data;
@@ -82,9 +85,10 @@ public class DocenteService {
     }
     
     public void data2Gson(String[][] data){
-        ArrayList<Gson> jsonData = new ArrayList<Gson>();
+        ArrayList<String> jsonData = new ArrayList<String>();
+
         for (String[] row : data) {
-            
+            Professore tmp = new Professore(pathFile, pathFile, pathFile, pathFile, null, pathFile);
         }
     }
 
