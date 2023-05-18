@@ -21,12 +21,13 @@ import com.google.gson.Gson;
 public class DocenteService {
     private String pathFile = "src\\main\\resources\\Docenti_attivita.xlsx";
     private String[][] data;
+    private Professore[] professori;
 
     public DocenteService(){
         ArrayList tmp = readRawFile();
-        data = new String[tmp.size()][5];
-        formatFile(tmp);
-        print();    
+        String[][] data = formatFile(tmp);
+        this.professori = data2Class(data);
+        //print();    
     }
 
     public ArrayList readRawFile(){
@@ -62,38 +63,72 @@ public class DocenteService {
         }
         return rawContent;
     }
-
-    public void formatFile(ArrayList<ArrayList<String>> rawData){
+    //Arraylist to Array
+    public String[][] formatFile(ArrayList<ArrayList<String>> rawData){
+        String[][] data = new String[rawData.size()][5];
         System.out.println("Inizio Formattazione");
         for(int i=0;i<rawData.size();i++){
             for(int j=0;j<5;j++){
-                this.data[i][j] = rawData.get(i).get(j);
+                data[i][j] = rawData.get(i).get(j);
             }
         }
-        System.out.println("Fine Formattazione");
+        return data;
     }
+    //Stampa le classi
     public void print(){
-        System.out.println("Inizio Stampa");
-        System.out.println(this.data);
-        for(int i = 1; i<this.data.length-1;i++){
-            for(int j = 0; j< this.data[0].length;j++){
-                System.out.print(this.data[i][j]+"\t\t");
-            }
-            System.out.println();
+        
+        for (Professore professore : professori) {
+            System.out.println(professore.toString());
         }
-        System.out.println("Fine Stampa");
-    }
-    
-    public void data2Gson(String[][] data){
-        ArrayList<String> jsonData = new ArrayList<String>();
-
-        for (String[] row : data) {
-            Professore tmp = new Professore(pathFile, pathFile, pathFile, pathFile, null, pathFile);
-        }
-    }
-
-    public static void main(String[] args) {
-        DocenteService dos = new DocenteService();
         
     }
+    //Trasforma i dati raw in un array di Classi Professore
+    public Professore[] data2Class(String[][] data){
+        ArrayList<Professore> tmp = new ArrayList<Professore>();
+
+        for (String[] row : data) {
+            String nome = row[1];
+            String email = row[2];
+            String scuola = row[3];
+            String citta = row[4];
+            Professore professore = new Professore(nome, email, scuola, citta);
+            if(checkProfessore(professore))
+                tmp.add(professore);
+        }
+        tmp = removeDuplicates(tmp);
+        Professore[] professori = new Professore[tmp.size()];
+        return tmp.toArray(professori);
+    }
+
+    //Controlla se non è un oggetto vuoto
+    private boolean checkProfessore(Professore professore){
+        if(professore.getCitta() == "" && professore.getEmail() == "" && professore.getNome() == "" && professore.getScuolaImp() == "")
+        return false;
+        return true;
+    }
+
+    //rimuove i professori con la stessa email in quanto chiave 
+    private ArrayList<Professore> removeDuplicates(ArrayList<Professore> professori){
+        System.out.println("Numero campi con duplicati :"+professori.size());
+
+        ArrayList<Professore> newProfessori = new ArrayList<>();
+        for (Professore professore : professori) {
+            boolean isGood= true;
+            for(Professore newProfessore: newProfessori){
+                if(professore.getEmail().equals(newProfessore.getEmail())){
+                    isGood = false;
+                    break;
+                }
+            }
+            if(isGood)
+                newProfessori.add(professore);
+        }
+
+        System.out.println("Numero campi senza duplicati: "+newProfessori.size());
+        return newProfessori;
+    }
+    public static void main(String[] args) {
+        DocenteService dos = new DocenteService();
+    }
+    
 }

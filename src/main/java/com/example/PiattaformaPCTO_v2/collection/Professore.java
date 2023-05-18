@@ -13,17 +13,24 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Professore {
 
 
+    
     @Id
-    private String idProf;
+    private String email;
 
     private String nome;
 
-    private String cognome;
-
-    private String email;
-
-    private Scuola scuolaImp;
+    private String scuolaImp;
     
     private String citta;
-    private String attivita;
+    
+    public Professore(String nome, String email, String scuolaImp, String citta){
+        this.nome = nome;
+        this.email = email;
+        this.scuolaImp = scuolaImp;
+        this.citta = citta;
+    }
+
+    public String toString(){
+        return "Nome:"+this.nome+"; Email: "+this.email+"; Scuola: "+this.scuolaImp+"; Citta: "+this.citta+";";
+    }
 }

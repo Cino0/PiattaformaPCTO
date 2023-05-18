@@ -13,6 +13,6 @@ public class SimpleProfessoreService implements ProfessoreService{
 
     @Override
     public String save(Professore professore) {
-        return professoreRepository.save(professore).getIdProf();
+        return professoreRepository.save(professore).getEmail();
     }
 }
