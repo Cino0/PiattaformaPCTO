@@ -20,9 +20,12 @@ import com.google.gson.Gson;
 
 public class DocenteService {
     private String pathFile = "src\\main\\resources\\Docenti_attivita.xlsx";
-    private String[][] data;
+    
     private Professore[] professori;
 
+    /**
+     * Costruttore
+     */
     public DocenteService(){
         ArrayList tmp = readRawFile();
         String[][] data = formatFile(tmp);
@@ -30,6 +33,10 @@ public class DocenteService {
         //print();    
     }
 
+    /**
+     * Prende il file che si trova nel percorso path e ritorna una matrice di celle 
+     * @return
+     */
     public ArrayList readRawFile(){
         ArrayList<ArrayList<String>> rawContent = new ArrayList<ArrayList<String>>();
         File file = new File(pathFile);
@@ -63,7 +70,11 @@ public class DocenteService {
         }
         return rawContent;
     }
-    //Arraylist to Array
+    /**
+     * Prende in input i dati non lavorati e ritorna un array di stringhe contenenti le celle
+     * @param rawData
+     * @return
+     */
     public String[][] formatFile(ArrayList<ArrayList<String>> rawData){
         String[][] data = new String[rawData.size()][5];
         System.out.println("Inizio Formattazione");
@@ -74,7 +85,9 @@ public class DocenteService {
         }
         return data;
     }
-    //Stampa le classi
+    /**
+     * Stampa l'array di oggetti
+     */
     public void print(){
         
         for (Professore professore : professori) {
@@ -82,7 +95,11 @@ public class DocenteService {
         }
         
     }
-    //Trasforma i dati raw in un array di Classi Professore
+    /**
+     * Converte l'array di stringhe in array di Oggetti Proffessore
+     * @param data
+     * @return
+     */
     public Professore[] data2Class(String[][] data){
         ArrayList<Professore> tmp = new ArrayList<Professore>();
 
@@ -100,14 +117,22 @@ public class DocenteService {
         return tmp.toArray(professori);
     }
 
-    //Controlla se non è un oggetto vuoto
+    /**
+     * Controlla se un oggetto Professore ha parametri nulli, se si ritorna Falso altrimenti Vero
+     * @param professore
+     * @return
+     */
     private boolean checkProfessore(Professore professore){
         if(professore.getCitta() == "" && professore.getEmail() == "" && professore.getNome() == "" && professore.getScuolaImp() == "")
         return false;
         return true;
     }
 
-    //rimuove i professori con la stessa email in quanto chiave 
+    /**
+     * Funzione che serve a rimuovere oggetti ridondanti all'interno dell'array;
+     * @param professori
+     * @return
+     */
     private ArrayList<Professore> removeDuplicates(ArrayList<Professore> professori){
         System.out.println("Numero campi con duplicati :"+professori.size());
 
@@ -125,10 +150,11 @@ public class DocenteService {
         }
 
         System.out.println("Numero campi senza duplicati: "+newProfessori.size());
+        print();
         return newProfessori;
     }
     public static void main(String[] args) {
         DocenteService dos = new DocenteService();
     }
-    
+    //TODO riscrivere tutti i metodi in modo che controllino all'aggiunta se una classe è duplicata o mento
 }
