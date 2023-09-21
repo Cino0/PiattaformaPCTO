@@ -108,7 +108,7 @@ public class DocenteService {
             String email = row[2];
             String scuola = row[3];
             String citta = row[4];
-            Professore professore = new Professore(nome, email, scuola, citta);
+            Professore professore = new Professore(nome, email, scuola);
             if(checkProfessore(professore))
                 tmp.add(professore);
         }
@@ -123,8 +123,8 @@ public class DocenteService {
      * @return
      */
     private boolean checkProfessore(Professore professore){
-        if(professore.getCitta() == "" && professore.getEmail() == "" && professore.getNome() == "" && professore.getScuolaImp() == "")
-        return false;
+        if( professore.getEmail() == "" && professore.getNome() == "" && professore.getScuolaImp() == "")
+            return false;
         return true;
     }
 

@@ -1,5 +1,6 @@
 package com.example.PiattaformaPCTO_v2.collection;
 
+import com.example.PiattaformaPCTO_v2.service.Utilities;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
@@ -20,21 +21,22 @@ public class Professore {
     private String nome;
 
     private String scuolaImp;
+
     
-    private String citta;
-    
-    public Professore(String nome, String email, String scuolaImp, String citta){
+    public Professore(String nome, String email, String scuolaImp){
         this.nome = nome;
         this.email = email;
         this.scuolaImp = scuolaImp;
-        this.citta = citta;
     }
 
     public String toString(){
-        return "Nome:"+this.nome+"; Email: "+this.email+"; Scuola: "+this.scuolaImp+"; Citta: "+this.citta+";";
+        return "Nome:"+this.nome+"; Email: "+this.email+"; Scuola: "+this.scuolaImp;
+    }
+    public String toJson(){
+        return "{nome:"+this.nome+";email:"+this.email+";scuolaImp:"+this.scuolaImp+"}";
     }
     public boolean equals(Professore prof){
-        if(prof.getEmail().equals(this.getEmail()) &&prof.getCitta().equals(this.getCitta()) && compare(prof.getScuolaImp(),this.getScuolaImp()) && compare(prof.getNome(),this.getNome())){
+        if(prof.getEmail().equals(this.getEmail()) ){
             return true;
         }
         return false;
