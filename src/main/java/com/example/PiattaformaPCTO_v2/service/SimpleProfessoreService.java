@@ -44,6 +44,7 @@ public class SimpleProfessoreService implements ProfessoreService{
         message+="<tr><th>Nome</th><th>Cognome</th><th>Email</th><th>Attivita</th><th>Scuola</th><th>Citta</th><th>Regione</th></tr>";
         for (Professore prof:profs) {
             Scuola scuola = scuolaRepository.getScuolaById(prof.getScuolaImp());
+            System.out.println(scuola.getNome());
             message += "<tr><th>"+prof.getNome()+"</th><th>"+prof.getCognome()+"</th><th>"+prof.getEmail()+"</th><th>"+prof.getAttivita()+"</th><th>"+scuola.getNome()+"</th><th>"+scuola.getCitta()+"</th><th>"+scuola.getRegione()+"</th></tr>";
         }
         message+="</table>";

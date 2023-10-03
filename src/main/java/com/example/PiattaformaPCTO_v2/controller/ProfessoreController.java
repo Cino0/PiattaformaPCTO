@@ -22,7 +22,7 @@ public class ProfessoreController {
     public String save(){
         return professoreService.upload();
     }
-    @GetMapping("/stampa/")
+    @GetMapping("/stampa")
     public String stampa(){
         return professoreService.stampa();
     }
