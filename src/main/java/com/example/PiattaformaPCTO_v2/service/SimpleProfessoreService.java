@@ -1,7 +1,9 @@
 package com.example.PiattaformaPCTO_v2.service;
 
 import com.example.PiattaformaPCTO_v2.collection.Professore;
+import com.example.PiattaformaPCTO_v2.collection.Scuola;
 import com.example.PiattaformaPCTO_v2.repository.ProfessoreRepository;
+import com.example.PiattaformaPCTO_v2.repository.ScuolaRepository;
 import org.apache.poi.hssf.usermodel.HSSFShape;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -10,6 +12,7 @@ import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,13 +29,37 @@ public class SimpleProfessoreService implements ProfessoreService{
 
     @Autowired
     private ProfessoreRepository professoreRepository;
+    @Autowired
+    private ScuolaRepository scuolaRepository;
 
     @Override
     public String save(Professore professore) {
         return professoreRepository.save(professore).getEmail();
     }
+    @Override
+    public String stampa(){
+        List<Professore> profs = professoreRepository.findAll();
+        String message = "MESSAGGIO:<br> Lunghezza: "+ profs.size()+"<br>";
+        message+="<table>";
+        message+="<tr><th>Nome</th><th>Cognome</th><th>Email</th><th>Attivita</th><th>Scuola</th><th>Citta</th><th>Regione</th></tr>";
+        for (Professore prof:profs) {
+            Scuola scuola = scuolaRepository.getScuolaById(prof.getScuolaImp());
+            message += "<tr><th>"+prof.getNome()+"</th><th>"+prof.getCognome()+"</th><th>"+prof.getEmail()+"</th><th>"+prof.getAttivita()+"</th><th>"+scuola.getNome()+"</th><th>"+scuola.getCitta()+"</th><th>"+scuola.getRegione()+"</th></tr>";
+        }
+        message+="</table>";
+        return message;
+    }
+    @Override
+    public String upload()  {
+        int counter = 0;
+        XSSFSheet regioni;
+        XSSFWorkbook wbRegioni = null;
+        try{
+            FileInputStream fisRegioni = new FileInputStream(new File("src/main/resources/comuni_regioni.xlsx"));
+            wbRegioni = new XSSFWorkbook(fisRegioni);
 
-    public static Professore[] getProfessors(XSSFSheet regioni)  {
+        }catch(Exception e){}
+        regioni = wbRegioni.getSheetAt(0);
         //file da dove prendo i dati
         String[] files = new String[]{"Docenti_attivita.xlsx","Progetto-NERD-2021-2022.xlsx"};
         Set<Professore> professori = new HashSet<Professore>();
@@ -52,16 +77,25 @@ public class SimpleProfessoreService implements ProfessoreService{
         }
         for(Row row:sheet) {
             String nome = "";
+            String cognome = "";
             String email = "";
             String scuolaImp = "";
             String citta= "";
+            String attivita="";
             for (int i=0; i<5;i++){
                 switch (i){
                     case 0:
+                        attivita = row.getCell(0).getStringCellValue();
                         break;
                     case 1:
                         try {
-                            nome = row.getCell(1).getStringCellValue();
+                            String[] tmp = row.getCell(1).getStringCellValue().split(" ",2);
+                            if(tmp.length>1){
+                                nome = tmp[0];
+                                cognome = tmp[1];
+                            }else{
+                                nome = tmp[0];
+                            }
                             if(Utilities.isEmail(nome))
                                 nome = "";
                         }catch (NullPointerException e) {
@@ -71,6 +105,7 @@ public class SimpleProfessoreService implements ProfessoreService{
                     case 2:
                         try {
                             email = row.getCell(2).getStringCellValue();
+                            email = email.toLowerCase();
                             if(!Utilities.isEmail(email)){
                                 email = "";
                             }
@@ -144,29 +179,39 @@ public class SimpleProfessoreService implements ProfessoreService{
                 email = nome;
                 nome = tmp;
             }
-            Professore prof = new Professore(nome, email, scuolaImp);
-            professori.add(prof);
+            Professore prof = new Professore(nome,cognome, email, findSchoolId(scuolaImp,citta),attivita);
+            //professori.add(prof);
+            this.save(prof);
+            counter++;
         }
-        Professore[] profs = professori.toArray(new Professore[professori.size()]);
-        return profs;
+        //Professore[] profs = professori.toArray(new Professore[professori.size()]);
+
+        return "Caricati "+counter+" professori";
     }
 
-    public static void main(String[] args) {
-        XSSFSheet sheet = null;
-        try{
-            FileInputStream fis = new FileInputStream(new File("src/main/resources/comuni_regioni.xlsx"));
-            XSSFWorkbook wb = new XSSFWorkbook(fis);
-            sheet = wb.getSheetAt(0);
-
-
-        }catch(Exception e){
-
+    private String findSchoolId(String scuola,String citta){
+        //converto tutto in maiuscolo
+        citta = citta.toUpperCase();
+        scuola = scuola.toUpperCase();
+        //Prendo le scuole che si trovano nella stessa citta
+        List<Scuola> scuole = scuolaRepository.getScuolaByCitta(citta);
+        if(scuole.size()==0){
+            scuole= scuolaRepository.findAll();
         }
-       Professore[] professori = SimpleProfessoreService.getProfessors(sheet);
-        System.out.println(professori.length);
-        for (Professore prof: professori) {
-            System.out.println(prof.toJson());
-        }
+            List<String> nomiScuole = new ArrayList<>();
+            for (Scuola s:scuole) {
+                nomiScuole.add(s.getNome());
+            }
+            ScuolaHelperService helper= new ScuolaHelperService();
+            String mostSimilarScuola = helper.findMostSimilarString(scuola,nomiScuole);
+            Iterator<Scuola> it = scuole.iterator();
+            while(it.hasNext()){
+                Scuola tmp = it.next();
+                if(tmp.getNome().equals(mostSimilarScuola))
+                    return tmp.getIdScuola();
+            }
 
+
+        return "";
     }
 }

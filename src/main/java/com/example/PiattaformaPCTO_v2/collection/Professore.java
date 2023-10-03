@@ -19,14 +19,16 @@ public class Professore {
     private String email;
 
     private String nome;
-
+    private String cognome;
     private String scuolaImp;
-
+    private String attivita;
     
-    public Professore(String nome, String email, String scuolaImp){
+    public Professore(String nome, String cognome,String email, String scuolaImp,String attivita){
         this.nome = nome;
+        this.cognome = cognome;
         this.email = email;
         this.scuolaImp = scuolaImp;
+        this.attivita = attivita;
     }
 
     public String toString(){
