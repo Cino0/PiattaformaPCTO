@@ -16,19 +16,17 @@ public class Universitario {
     public String matricola;
     public String nome;
     public String cognome;
-
-    public String annoImm;
-
-
+    public int annoImm;
+    public String corso;
     public String comuneScuola;
-
     public String scuolaProv;
 
-    public Universitario(String matricola, String nome, String cognome, String annoImm, String comuneScuola, String scuolaProv) {
+    public Universitario(String matricola, String nome, String cognome, int annoImm,String corso, String comuneScuola, String scuolaProv) {
         this.matricola = matricola;
         this.nome = nome;
         this.cognome = cognome;
         this.annoImm = annoImm;
+        this.corso=corso;
         this.comuneScuola = comuneScuola;
         this.scuolaProv = scuolaProv;
     }

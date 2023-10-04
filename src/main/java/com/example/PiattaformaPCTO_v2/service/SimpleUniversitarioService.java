@@ -1,59 +1,107 @@
 package com.example.PiattaformaPCTO_v2.service;
 
+import com.example.PiattaformaPCTO_v2.collection.Iscrizioni;
 import com.example.PiattaformaPCTO_v2.collection.Universitario;
+import com.example.PiattaformaPCTO_v2.repository.IscrizioniRepository;
 import com.example.PiattaformaPCTO_v2.repository.UniversitarioRepository;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Iterator;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.*;
 
 @Service
 public class SimpleUniversitarioService implements UniversitarioService {
 
-
     @Autowired
     private UniversitarioRepository universitarioRepository;
+    @Autowired
+    private IscrizioniRepository iscrizioniRepository;
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+
     @Override
     public String save(Universitario universitario) {
         return universitarioRepository.save(universitario).getNome();
     }
 
     @Override
-    public String upload() {
-        String filePath="src/main/resources/iscri.xlsx";
-        try {
-            FileInputStream excel = new FileInputStream(new File(filePath));
-            Workbook workbook = new XSSFWorkbook(excel);
-            Sheet dataSheet = workbook.getSheetAt(0);
-            Iterator<Row> iterator = dataSheet.rowIterator();
-            iterator.next();
-            while (iterator.hasNext()){
-                Row row = iterator.next();
-                String matr= row.getCell(4).getStringCellValue();
-               // System.out.println(matr);
-                //String matricola= String.valueOf(matr);
-                String nome = row.getCell(7).getStringCellValue();
-               // System.out.println(nome);
-                String cognome = row.getCell(6).getStringCellValue();
-                //System.out.println(cognome);
-                String comune = row.getCell(39).getStringCellValue().toUpperCase();
-               // System.out.println(comune);
-                String scuola = row.getCell(38).getStringCellValue();
-               // System.out.println(scuola);
-                Universitario universitario = new Universitario(matr,nome,cognome,"4043",comune,scuola);
+    public String upload(MultipartFile file) {
+        LocalDate date = LocalDate.now();
+        Iscrizioni i = new Iscrizioni((date.getYear()*2)+1);
+        Sheet dataSheet = this.fileOpenerHelper(file);
+        Iterator<Row> iterator = dataSheet.rowIterator();
+        iterator.next();
+        while (iterator.hasNext()){
+            Row row = iterator.next();
+            double matr= row.getCell(4).getNumericCellValue();
+            String m = String.valueOf(matr).replaceAll("[0]*$", "").replaceAll(".$", "");
+            String nome = row.getCell(5).getStringCellValue();
+            String cognome = row.getCell(6).getStringCellValue();
+            if (row.getCell(9)!=null){
+                String comune = row.getCell(9).getStringCellValue().toUpperCase();
+                String scuola = row.getCell(8).getStringCellValue();
+                String corso = row.getCell(1).getStringCellValue();
+                Universitario universitario = new Universitario(m,nome,cognome,date.getYear(),corso,comune,scuola);
                 System.out.println(universitario.toString());
-               this.save(universitario);
+                i.addUniversitario(universitario);
             }
-        } catch (IOException e) {
+        }
+        this.iscrizioniRepository.save(i);
+        return null;
+    }
+
+    @Override
+    public List<Universitario> getUniversitari() {
+        return this.universitarioRepository.findAll();
+    }
+
+    @Override
+    public void salva() {
+       /* Iscrizioni i = new Iscrizioni(2023);
+        Universitario u = new Universitario("109211","Matteo","Manci","2023","info","pse","pippo");
+        i.addUniversitario(u);
+        this.iscrizioniRepository.save(i);*/
+    }
+
+    @Override
+    public List<Iscrizioni> getIscrizioni() {
+       return this.iscrizioniRepository.findAll();
+    }
+
+    @Override
+    public List<Iscrizioni> getIscrizioniAnno(int anno) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("annoAc").is(anno));
+        return mongoTemplate.find(query,Iscrizioni.class);
+    }
+
+    @Override
+    public Sheet fileOpenerHelper(MultipartFile file) {
+        try {
+            Path tempDir = Files.createTempDirectory("");
+            File tempFile = tempDir.resolve(file.getOriginalFilename()).toFile();
+            file.transferTo(tempFile);
+            Workbook workbook = new XSSFWorkbook(tempFile);
+            Sheet dataSheet = workbook.getSheetAt(0);
+            return dataSheet;
+        } catch (IOException | InvalidFormatException e) {
             throw new RuntimeException(e);
         }
-        return null;
     }
 }

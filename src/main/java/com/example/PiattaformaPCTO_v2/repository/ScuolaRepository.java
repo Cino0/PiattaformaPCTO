@@ -17,9 +17,16 @@ public interface ScuolaRepository extends MongoRepository<Scuola,String> {
     @Query("{'nome': {'$regex': ?0}, 'citta': ?1}")
     Scuola getScuolaByNomeContainingAndAndCitta(String nome,String citta);
 
+
+    @Query("{'citta':?0, 'nome':?1}")
+    Scuola getScuolaByCittaAndNome(String citta,String nome);
+
     @Query("{'_id': ?0}")
     Scuola getScuolaById(String id);
 
     @Query("{'citta': ?0}")
     List<Scuola> getScuolaByCitta(String citta);
+
+    @Query(value="{'_id' : *}", fields="{'citta' : 1, '_id': 0}")
+    List<String> getAllCitta();
 }

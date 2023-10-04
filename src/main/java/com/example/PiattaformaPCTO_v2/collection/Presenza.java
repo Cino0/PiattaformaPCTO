@@ -1,11 +1,13 @@
 package com.example.PiattaformaPCTO_v2.collection;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
+
 public class Presenza {
 
     private String nomeAttivita;

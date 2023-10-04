@@ -8,13 +8,16 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.function.EntityResponse;
 
 
 import java.io.File;
 import java.io.FileInputStream;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 @Service
 public class SimpleScuolaService implements ScuolaService{
@@ -72,6 +75,31 @@ public class SimpleScuolaService implements ScuolaService{
         String s= scuola.getNome();
 
         System.out.println(s.replace('"','$'));
+    }
+
+    @Override
+    public List<Scuola> getScuole() {
+        return this.scuolaRepository.findAll();
+    }
+
+    @Override
+    public List<String> getCitta() {
+        List<Scuola> scuole = this.scuolaRepository.findAll();
+        List<String> citta = new ArrayList<>();
+        for (Scuola s : scuole){
+            citta.add(s.getCitta());
+        }
+        return citta;
+    }
+
+    @Override
+    public List<String> getNomi(String c) {
+        List<Scuola> scuole = this.scuolaRepository.getScuolaByCitta(c);
+        List<String> nomi = new ArrayList<>();
+        for (Scuola s : scuole){
+            nomi.add(s.getNome());
+        }
+        return nomi;
     }
 
 
