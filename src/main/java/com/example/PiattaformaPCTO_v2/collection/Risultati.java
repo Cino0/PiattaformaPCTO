@@ -13,15 +13,15 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Risultati {
 
-    private String annoAcc;
+    private int annoAcc;
 
     private Scuola  scuola;
 
     private List<Presenza> attivita;
 
-    private List<Studente> iscritti;
+    private List<Universitario> iscritti;
 
-    public Risultati(String annoAcc, Scuola scuola) {
+    public Risultati(int annoAcc, Scuola scuola) {
         this.annoAcc = annoAcc;
         this.scuola = scuola;
         this.attivita=new ArrayList<>(10000);
@@ -30,7 +30,7 @@ public class Risultati {
 
 
 
-    public void nuovoIscritto(Studente studente){
+    public void nuovoIscritto(Universitario studente){
         this.iscritti.add(studente);
     }
 }

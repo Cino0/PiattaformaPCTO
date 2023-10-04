@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/attivita")
+@CrossOrigin(origins = "http://localhost:4200",allowedHeaders = "*")
 public class AttivitaController {
 
     @Autowired
@@ -67,12 +68,43 @@ public class AttivitaController {
         attivitaService.uploadG(file);
     }
 
-
-    @GetMapping("/crea")
-    public void creaPdf(){
-        attivitaService.creaPdf();
+    @PostMapping("/nerd")
+    public void uploadN(@RequestParam("file") MultipartFile file){
+        attivitaService.uploadNerd(file);
     }
 
+    @PostMapping("/open23")
+    public void uploadO23(@RequestParam("file")MultipartFile file){ attivitaService.uploadOpen23(file); }
 
+
+    @PostMapping("/lab")
+    public void uploadLab(@RequestParam("file")MultipartFile file){attivitaService.uploadLab(file);}
+
+
+    @PostMapping("/stem")
+    public void uploadStem(@RequestParam("file") MultipartFile file){attivitaService.uploadStem(file);}
+
+
+    @PostMapping("/aper")
+    public void uploadScuoleA(@RequestParam("file") MultipartFile file){attivitaService.uploadScuoleA(file);}
+
+
+    @PostMapping("/laba")
+    public void uploadLabOpen(@RequestParam("file")MultipartFile file){attivitaService.uploadLabOpen(file);}
+
+
+    @PostMapping("/generi/{nome}")
+    public void uploadGenerico(@RequestParam("file")MultipartFile file ,
+                               @PathVariable String nome){attivitaService.uploadGenerico(file,nome);}
+
+    @PostMapping("/pau")
+    public void uploadPau(@RequestParam("file")MultipartFile file){attivitaService.uploadPau23(file);}
+
+    @PostMapping("/cont")
+    public void uploadContest(@RequestParam("file")MultipartFile file){attivitaService.uploaedContest23(file);}
+
+
+    @GetMapping("/prova")
+    void prova(){attivitaService.prova();}
 
 }

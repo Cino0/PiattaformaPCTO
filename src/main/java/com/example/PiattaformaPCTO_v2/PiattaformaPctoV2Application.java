@@ -10,4 +10,5 @@ public class PiattaformaPctoV2Application {
 		SpringApplication.run(PiattaformaPctoV2Application.class, args);
 	}
 
+
 }

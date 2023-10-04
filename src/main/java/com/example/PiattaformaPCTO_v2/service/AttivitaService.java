@@ -28,9 +28,25 @@ public interface AttivitaService {
 
     void uploadG(MultipartFile file);
 
+    void uploadNerd(MultipartFile file);
 
-    void creaPdf();
+    void uploadOpen23(MultipartFile file);
 
+    void uploadLab(MultipartFile file);
+
+    void uploadStem(MultipartFile file);
+
+    void uploadScuoleA(MultipartFile file);
+
+    void uploadLabOpen(MultipartFile file);
+
+
+    void uploadGenerico (MultipartFile file, String nome);
+
+    void uploadPau23(MultipartFile file);
+
+
+    void uploaedContest23(MultipartFile file);
 
     /**
      * Find information about students that chose UNICAM and their high school, given an activity.
@@ -38,4 +54,9 @@ public interface AttivitaService {
      * @return list of activity view pairs
      */
     List<ActivityViewDTOPair> findStudentsFromActivity(String activityName);
+
+
+    List<Attivita> getAttivita(int anno);
+
+    void prova();
 }

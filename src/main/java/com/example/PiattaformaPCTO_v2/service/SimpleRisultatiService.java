@@ -2,15 +2,13 @@ package com.example.PiattaformaPCTO_v2.service;
 
 import com.example.PiattaformaPCTO_v2.collection.*;
 import com.example.PiattaformaPCTO_v2.dto.ActivityViewDTOPair;
-import com.example.PiattaformaPCTO_v2.repository.AttivitaRepository;
-import com.example.PiattaformaPCTO_v2.repository.ScuolaRepository;
-import com.example.PiattaformaPCTO_v2.repository.UniversitarioRepository;
+import com.example.PiattaformaPCTO_v2.repository.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 
@@ -21,47 +19,47 @@ import java.util.*;
 @Service
 public class SimpleRisultatiService implements RisultatiService {
 
-
+    @Autowired
+    private RisultatiRepository risultatiRepository;
+    @Autowired
+    private RisultatiAttRepository risultatiAttRepository;
     @Autowired
     private AttivitaRepository attivitaRepository;
-
     @Autowired
     private UniversitarioRepository universitarioRepository;
     @Autowired
     private ScuolaRepository scuolaRepository;
+    @Autowired
     private AttivitaService attivitaService;
+    @Autowired
+    private UniversitarioService universitarioService;
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+
 
     @Override
     public void crea() {
         //Ottengo la lista di tutte le attività, da migliorare filtrando con l'anno accademico di svolgimento
-        List<Attivita> attivita = attivitaRepository.findAll();
-
+        List<Attivita> attivita = this.attivitaService.getAttivita(4047);
         //Creo una lista vuota per contenere tutti i risultati
         List<Risultati> r = new ArrayList<>();
-
         //Scorro la lista delle attività presenti, da miglirare anche con un for each
         for (int i=0;i<attivita.size()-1;i++){
-
             //ottengo il nome dell'attività
             String nome= attivita.get(i).getNome();
-            //System.out.println(nome);
-
             // dalla singola attività ottengo la lista degli studenti partecipanti
             List<Studente> stud = attivita.get(i).getStudPartecipanti();
-
             // scorro tutti gli studenti
             for (int x = 0; x < stud.size(); x++) {
-
                 //dal singolo studente ottengo la scuola che frequenta
                 Scuola s = stud.get(x).getScuola();
                 // Prendo l'id, si puo collassare in una dichiarazione sola
                 String scuola = s.getIdScuola();
-
                 //Utilizzo il metodo per ottenere l'indice in cui inserire la scuola
                 int index=this.scuoleHelperd(r,scuola);
                 // nel caso la scuola sia presente
                 if (index != -1) {
-
                     //Utilizzo il metodo per ottenere l'indice in cui inserire l'attivita
                     int a = this.attivitaHelper(r.get(index).getAttivita(), nome);
                     //nel caso in cui l'attivta sia gia presente aggiungo la presenza di quello studente
@@ -76,7 +74,7 @@ public class SimpleRisultatiService implements RisultatiService {
                 } else {
                     //nel caso in cui non sia presente la scuola creo una nuova presenza e un risultato per la scuola
                     Presenza p = new Presenza(nome);
-                    Risultati res = new Risultati("21/22", s);
+                    Risultati res = new Risultati(4047, s);
                     p.getPartecipanti().add(stud.get(x));
                     res.getAttivita().add(p);
                     r.add(res);
@@ -91,128 +89,118 @@ public class SimpleRisultatiService implements RisultatiService {
                     String nome= studi.getNome().toUpperCase();
                     String cognome= studi.getCognome().toUpperCase();
                     String citta= studi.getScuola().getCitta().toUpperCase();
-                    Universitario uni =universitarioRepository.findByNomeAndCognomeAndComuneScuola(nome,cognome,citta);
-                    if(uni!=null){
-                        //System.out.println(uni.getCognome()+"   "+uni.getScuolaProv());
-                        r.get(y).getAttivita().get(b).nuovoIscritto(studi);
-                        if (this.studenteHelper(r, studi) == 0) {
-                            r.get(y).nuovoIscritto(studi);
+                    List<Iscrizioni> i = this.universitarioService.getIscrizioniAnno(4047);
+                    Iscrizioni is= i.get(0);
+                    System.out.println("qua");
+                    for (Universitario u : is.getUniversitari()){
+                        if(u.getNome().equals(nome)){
+                            if (u.getCognome().equals(cognome)){
+                                if (u.getComuneScuola().equals(citta)){
+                                    r.get(y).getAttivita().get(b).nuovoIscritto(studi);
+                                    if (this.studenteHelper(r, studi) == 0) {
+                                        r.get(y).nuovoIscritto(u);
+                                    }
+                                }
+                            }
                         }
-
                     }
                 }
             }
         }
         risultatiInf(attivita,r);
-        /*or (Risultati risultati: r){
-            for (Studente s : risultati.getIscritti()){
-                System.out.println(s.toString());
-            }
-        }*/
-        //this.creaRisultato(r);
-        //this.createexcl(r);
-        this.createword(r);
+        this.risultatiRepository.saveAll(r);
     }
 
     @Override
     public void createStudentsFromActivities() {
         Map<Attivita, List<ActivityViewDTOPair>> result = new HashMap<>();
-        List<Attivita> activities = this.attivitaRepository.findAll();
+        List<Attivita> activities = this.attivitaService.getAttivita(4047);
+        System.out.println(activities.size());
+        List<RisultatiAtt> res = new ArrayList<>();
         activities.forEach(a -> result.put(a, attivitaService.findStudentsFromActivity(a.getNome())));
-        XWPFDocument xwpfDocument = new XWPFDocument();
-        String filepath = "src/main/resources/StudentsFromActivities.docx";
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(filepath);
-            result.entrySet().forEach(e -> {
-                XWPFParagraph paragraph = xwpfDocument.createParagraph();
-                XWPFRun run = paragraph.createRun();
-                Attivita activity = e.getKey();
-                run.setText(String.format("Nome: %s | Anno: %s", activity.getNome(), activity.getAnnoAcc()));
-                run.addBreak();
-                long universityStudentsCount = e.getValue().stream().count();
-                run.setText(String.format("Totale iscritti dall'attività: %d", universityStudentsCount));
-                run.addBreak();
-                if (universityStudentsCount > 0){run.setText("Elenco universitari:");
-                    run.addBreak();
-                    for (ActivityViewDTOPair p : e.getValue()) {
-                        run.setText(String.format("%s (%s), %s %s, %s | %s | %s, %s, %s",
-                                p.universityStudent().getMatricola(),
-                                p.universityStudent().getAnnoImm(),
-                                p.universityStudent().getNome(),
-                                p.universityStudent().getCognome(),
-                                p.highSchool().getNome(),
-                                p.highSchool().getTipo(),
-                                p.highSchool().getCitta(),
-                                p.highSchool().getProvincia(),
-                                p.highSchool().getRegione()));
-                        run.addBreak();
-                    }
-                }
-                run.addBreak();
+        result.entrySet().forEach(e -> {
+            RisultatiAtt r = new RisultatiAtt();
+            r.setAttivita(e.getKey().getNome());
+            r.setAnnoAcc(4047);
+            e.getValue().forEach(v ->{
+                List<Universitario> u = new ArrayList<>();
+                u.add(v.universityStudent());
+               r.addUniversitari(v.universityStudent());
             });
-            xwpfDocument.write(fileOutputStream);
-            xwpfDocument.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+            res.add(r);
+        });
+        risultatiAttRepository.saveAll(res);
     }
+
+    @Override
+    public List<Risultati> getRisultati() {
+        return this.risultatiRepository.findAll();
+    }
+
+    @Override
+    public List<RisultatiAtt> getRisultatiAtt() {
+        return this.risultatiAttRepository.findAll();
+    }
+
+
+    @Override
+    public Risultati stampa() {
+        List<Risultati> r = this.risultatiRepository.findAll();
+        return r.get(0);
+    }
+
+    @Override
+    public List<Risultati> getRisultatiAnno(int anno) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("annoAcc").is(anno));
+        return this.mongoTemplate.find(query,Risultati.class);
+    }
+
     @Override
     public void risultatiInf(List<Attivita> attivita, List<Risultati> r) {
         Attivita att = attivita.get(4);
         String nome = att.getNome();
         for (Studente s : att.getStudPartecipanti()){
             Universitario uni = universitarioRepository.findByNomeAndCognome(s.getNome().toUpperCase(),s.getCognome().toUpperCase());
-            if(uni!= null){
-                System.out.println(s.toString());
-                Scuola scuola = findScuola(uni.getComuneScuola(), uni.getScuolaProv());
-                s.setScuola(scuola);
-                int index=this.scuoleHelperd(r,scuola.getIdScuola());
-                if (index!=-1){
-                    int a=this.attivitaHelper(r.get(index).getAttivita(),nome);
-                    if (a!=-1){
-                        System.out.println("Prima "+r.get(index).getAttivita().get(a).getIscritti().size());
-                        r.get(index).getAttivita().get(a).getPartecipanti().add(s);
-                        r.get(index).getAttivita().get(a).nuovoIscritto(s);
-                        System.out.println("Dopo "+r.get(index).getAttivita().get(a).getIscritti().size());
-                        if(this.studenteHelper(r,s)==0){
-                            r.get(index).nuovoIscritto(s);
-                        }
-                    }else{
-                        System.out.println(" "+r.get(index).getAttivita().get(0).getIscritti().size());
-                        Presenza p = new Presenza(nome);
-                        p.getPartecipanti().add(s);
-                        p.nuovoIscritto(s);
-                        r.get(index).getAttivita().add(p);
-                        System.out.println("Dopo "+r.get(index).getAttivita().get(0).getIscritti().size());
-                        if (this.studenteHelper(r,s)==0){
-                            r.get(index).nuovoIscritto(s);
+            List<Iscrizioni> i = this.universitarioService.getIscrizioniAnno(2022);
+            for (Universitario u :i.get(0).getUniversitari()){
+                if (u.getNome().equals(s.getNome().toUpperCase())){
+                    if (u.getCognome().equals(s.getCognome().toUpperCase())){
+                        Scuola scuola = findScuola(u.getComuneScuola(), u.getScuolaProv());
+                        s.setScuola(scuola);
+                        int index=this.scuoleHelperd(r,scuola.getIdScuola());
+                        if (index!=-1){
+                            int a=this.attivitaHelper(r.get(index).getAttivita(),nome);
+                            if (a!=-1){
+                                r.get(index).getAttivita().get(a).getPartecipanti().add(s);
+                                r.get(index).getAttivita().get(a).nuovoIscritto(s);
+                                if(this.studenteHelper(r,s)==0){
+                                    r.get(index).nuovoIscritto(u);
+                                }
+                            }else{
+                                System.out.println(" "+r.get(index).getAttivita().get(0).getIscritti().size());
+                                Presenza p = new Presenza(nome);
+                                p.getPartecipanti().add(s);
+                                p.nuovoIscritto(s);
+                                r.get(index).getAttivita().add(p);
+                                System.out.println("Dopo "+r.get(index).getAttivita().get(0).getIscritti().size());
+                                if (this.studenteHelper(r,s)==0){
+                                    r.get(index).nuovoIscritto(u);
+                                }
+                            }
+                        }else{
+                            Presenza p = new Presenza(nome);
+                            Risultati res = new Risultati(4043,scuola);
+                            p.getPartecipanti().add(s);
+                            p.nuovoIscritto(s);
+                            res.getAttivita().add(p);
+                            res.nuovoIscritto(u);
+                            r.add(res);
                         }
                     }
-                }else{
-                    Presenza p = new Presenza(nome);
-                    Risultati res = new Risultati("21/22",scuola);
-                    p.getPartecipanti().add(s);
-                    p.nuovoIscritto(s);
-                    res.getAttivita().add(p);
-                    res.nuovoIscritto(s);
-                    r.add(res);
                 }
             }
         }
-
-       /*System.out.println("entra");
-        List<Attivita> atti =attivitaRepository.findAll();
-        Attivita a = atti.get(4);
-        for (Studente s :a.getStudPartecipanti()){
-            Universitario uni = universitarioRepository.findByNomeAndCognome(s.getNome().toUpperCase(),s.getCognome().toUpperCase());
-           if(uni!= null){
-                System.out.println("uno c'e");
-                System.out.println(uni.toString());
-                Scuola scuola = findScuola(uni.getComuneScuola(), uni.getScuolaProv());
-               System.out.println(scuola.toString());
-            }
-        }*/
-
     }
 
 
@@ -393,7 +381,7 @@ public class SimpleRisultatiService implements RisultatiService {
 
     private int studenteHelper(List<Risultati> risultati,Studente studente){
         for (Risultati r : risultati){
-            for (Studente s : r.getIscritti()){
+            for (Universitario s : r.getIscritti()){
                 if (s.getNome().toUpperCase().equals(studente.getNome().toUpperCase())&&
                 s.getCognome().toUpperCase().equals(studente.getCognome().toUpperCase())){
                     return -1;
@@ -404,7 +392,7 @@ public class SimpleRisultatiService implements RisultatiService {
     }
 
 
-    private void createword(List<Risultati> r) {
+   /* private void createword(List<Risultati> r) {
         XWPFDocument xwpfDocument = new XWPFDocument();
         XWPFDocument nonIscr = new XWPFDocument();
         String filepath="src/main/resources/Iscritti.docx";
@@ -461,7 +449,5 @@ public class SimpleRisultatiService implements RisultatiService {
         }
     }
 
-
-
-
+*/
 }
