@@ -50,6 +50,13 @@ public class SimpleProfessoreService implements ProfessoreService{
         message+="</table>";
         return message;
     }
+
+    @Override
+    public List<Professore> getAllProf() {
+        List<Professore> p = this.professoreRepository.findAll();
+        return p;
+    }
+
     @Override
     public String upload()  {
         int counter = 0;

@@ -17,6 +17,8 @@ public interface AttivitaService {
 
     void uploadCartel();
 
+    void uploadMontani(MultipartFile file);
+
     Sheet fileOpenerHelper(MultipartFile file);
 
 
@@ -48,6 +50,8 @@ public interface AttivitaService {
 
     void uploaedContest23(MultipartFile file);
 
+    void uploadRecanati23(MultipartFile file);
+
     /**
      * Find information about students that chose UNICAM and their high school, given an activity.
      *
@@ -57,6 +61,7 @@ public interface AttivitaService {
 
 
     List<Attivita> getAttivita(int anno);
+
 
     void prova();
 }

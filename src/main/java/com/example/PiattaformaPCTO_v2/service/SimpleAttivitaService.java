@@ -22,9 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class SimpleAttivitaService implements AttivitaService {
@@ -63,7 +61,7 @@ public class SimpleAttivitaService implements AttivitaService {
             FileInputStream excel = new FileInputStream(new File(filePath));
             File file = new File(filePath);
             String name = FilenameUtils.removeExtension(file.getName());
-            Attivita attivita = new Attivita(name,"PROGETTO_NERD", 4043, new ArrayList<>());
+            Attivita attivita = new Attivita("PROGETTO_NERD_4043","PROGETTO_NERD", 4043, new ArrayList<>());
             System.out.println(filePath);
             Workbook workbook = new XSSFWorkbook(excel);
             Sheet dataSheet = workbook.getSheetAt(0);
@@ -72,7 +70,8 @@ public class SimpleAttivitaService implements AttivitaService {
             while (iterator.hasNext()) {
                 Row riga = iterator.next();
                 if (riga.getCell(3) != null) {
-                    Scuola scuola = scuolaRepository.getScuolaByNome(riga.getCell(8).getStringCellValue());
+                   //Scuola scuola = scuolaRepository.getScuolaByNome(riga.getCell(8).getStringCellValue());
+                    Scuola scuola = scuolaRepository.getScuolaById(riga.getCell(8).getStringCellValue());
                     if (scuola != null) {
                         String nome = riga.getCell(3).getStringCellValue();
                         String cognome = riga.getCell(4).getStringCellValue();
@@ -101,7 +100,7 @@ public class SimpleAttivitaService implements AttivitaService {
             FileInputStream excel = new FileInputStream(new File(filePath));
             File file = new File(filePath);
             String name = FilenameUtils.removeExtension(file.getName());
-            Attivita attivita = new Attivita(name,"SUMMER_SCHOOL_STEM", 4043, new ArrayList<>());
+            Attivita attivita = new Attivita("SUMMER_SCHOOL_4043","SUMMER_SCHOOL_STEM", 4043, new ArrayList<>());
             Workbook workbook = new XSSFWorkbook(excel);
             Sheet dataSheet = workbook.getSheetAt(0);
             Iterator<Row> iterator = dataSheet.rowIterator();
@@ -139,7 +138,7 @@ public class SimpleAttivitaService implements AttivitaService {
             FileInputStream excel = new FileInputStream(new File(filePath));
             File file = new File(filePath);
             String name = FilenameUtils.removeExtension(file.getName());
-            Attivita attivita = new Attivita(name,"PCTO_RECNATI", 4043, new ArrayList<>());
+            Attivita attivita = new Attivita("PCTO_RECANATI_4043","PCTO_RECNATI", 4043, new ArrayList<>());
             Workbook workbook = new XSSFWorkbook(excel);
             Sheet dataSheet = workbook.getSheetAt(0);
             Iterator<Row> iterator = dataSheet.rowIterator();
@@ -164,12 +163,36 @@ public class SimpleAttivitaService implements AttivitaService {
 
     }
 
+    @Override
+    public void uploadMontani(MultipartFile file) {
+        Attivita attivita = new Attivita("PCTO_MONTANI_4043","PCTO_MONTANI", 4043, new ArrayList<>());
+        Sheet dataSheet = this.fileOpenerHelper(file);
+        List<String> citta = this.scuolaService.getCitta();
+        Iterator<Row> iterator = dataSheet.rowIterator();
+        while(iterator.hasNext()){
+            Row row = iterator.next();
+            String c = row.getCell(3).getStringCellValue().toUpperCase();
+            String trovata = this.stringFinderHelper.findMostSimilarString(c,citta);
+            List<String> nomi = this.scuolaService.getNomi(trovata);
+            String s =row.getCell(2).getStringCellValue();
+            String sT= this.stringFinderHelper.findMostSimilarString(s,nomi);
+            System.out.println("Data: "+s+" Trovata: "+sT);
+            Scuola scuola = scuolaRepository.getScuolaByCittaAndNome(trovata,sT);
+            String nome = row.getCell(0).getStringCellValue();
+            String cognome = row.getCell(1).getStringCellValue();
+            String id = nome + cognome + scuola.getNome();
+            Studente stud = new Studente(id, nome, cognome, scuola);
+            attivita.getStudPartecipanti().add(stud);
+        }
+        System.out.println(this.save(attivita));
+
+    }
 
 
     //file PAU 2022-Informatica.xlsx
     @Override
     public void uploadOpen(MultipartFile file) {
-        Attivita attivita = new Attivita("Open2022","PORTE_APERTE_UNICAM", 4043, new ArrayList<>());
+        Attivita attivita = new Attivita("PORTO_APERTE_UNICAM_4043","PORTE_APERTE_UNICAM", 4043, new ArrayList<>());
         Sheet dataSheet = this.fileOpenerHelper(file);
         Iterator<Row> iterator = dataSheet.rowIterator();
         iterator.next();
@@ -192,14 +215,17 @@ public class SimpleAttivitaService implements AttivitaService {
     //file informatica_x_giocoEd3.xlsx
     @Override
     public void uploadGioco(MultipartFile file) {
-        Attivita attivita = new Attivita("InformaticaXGioco", 4043, "CONTEST_INFORMATICA_X_GIOCO");
+        System.out.println("Sono nel metodo upload gioco");
+        Attivita attivita = new Attivita("CONTEST_INFORMATICA_X_GIOCO_4043", 4043, "CONTEST_INFORMATICA_X_GIOCO");
         Sheet dataSheet = this.fileOpenerHelper(file);
         Iterator<Row> iterator = dataSheet.rowIterator();
         iterator.next();
         Scuola s = new Scuola("xxx", "Scuolax", "MARCHE", "FERMO", "PSE", "LICEO");
         while (iterator.hasNext()) {
+            System.out.println(s);
             Row r = iterator.next();
             if (!r.getCell(0).getStringCellValue().isEmpty()) {
+                System.out.println("qua dentro if");
                 int finale = r.getCell(0).getStringCellValue().length();
                 int inizioNome = (r.getCell(0).getStringCellValue().indexOf(':')) + 2;
                 int inizioCognome = (r.getCell(0).getStringCellValue().lastIndexOf(':')) + 2;
@@ -207,9 +233,10 @@ public class SimpleAttivitaService implements AttivitaService {
                 String nome = r.getCell(0).getStringCellValue().substring(inizioNome, fineNome);
                 String cognome = r.getCell(0).getStringCellValue().substring(inizioCognome, finale);
                 String id = nome + cognome + s.getNome();
-                Studente stud = new Studente(id, nome, cognome, s);
-                attivita.getStudPartecipanti().add(stud);
-                System.out.println(stud);
+               // Studente stud = new Studente(id, nome, cognome, s);
+                //System.out.println(stud);
+                attivita.getStudPartecipanti().add(new Studente(id, nome, cognome, s));
+                //System.out.println(stud);
             }
         }
 
@@ -241,7 +268,7 @@ public class SimpleAttivitaService implements AttivitaService {
     //file nerd23.xlsx
     @Override
     public void uploadNerd(MultipartFile file) {
-        Attivita attivita = new Attivita("Nerd23", "PROGETTO_NERD",4045, new ArrayList<>());
+        Attivita attivita = new Attivita("PROGETTO_NERD_4045", "PROGETTO_NERD",4045, new ArrayList<>());
         Sheet dataSheet = this.fileOpenerHelper(file);
         List<String> citta = this.scuolaService.getCitta();
         Iterator<Row> iterator = dataSheet.rowIterator();
@@ -269,7 +296,7 @@ public class SimpleAttivitaService implements AttivitaService {
     //file PCTO-Informatica23.xlsx
     @Override
     public void uploadOpen23(MultipartFile file) {
-        Attivita attivita = new Attivita("PTCO23","PCTO_IN_PRESENZA", 4045, new ArrayList<>());
+        Attivita attivita = new Attivita("PCTO_IN_PRESENZA_4045","PCTO_IN_PRESENZA", 4045, new ArrayList<>());
         Sheet dataSheet = this.fileOpenerHelper(file);
         List<String> citta = this.scuolaService.getCitta();
         Iterator<Row> iterator = dataSheet.rowIterator();
@@ -296,7 +323,7 @@ public class SimpleAttivitaService implements AttivitaService {
     //file SummerLab2023.xlsx
     @Override
     public void uploadLab(MultipartFile file) {
-        Attivita attivita = new Attivita("SummerLab23","SUMMERLAB", 4045, new ArrayList<>());
+        Attivita attivita = new Attivita("SUMMERLAB_4045","SUMMERLAB", 4045, new ArrayList<>());
         Sheet dataSheet = this.fileOpenerHelper(file);
         List<String> citta = this.scuolaService.getCitta();
         Iterator<Row> iterator = dataSheet.rowIterator();
@@ -326,7 +353,7 @@ public class SimpleAttivitaService implements AttivitaService {
     //SummerSchoolSTEM2023.xlsx
     @Override
     public void uploadStem(MultipartFile file) {
-        Attivita attivita = new Attivita("SummerSchoolSTEM23","SUMMER_SCHOOL_STEM", 4045, new ArrayList<>());
+        Attivita attivita = new Attivita("SUMMER_SCHOOL_STEM_4045","SUMMER_SCHOOL_STEM", 4045, new ArrayList<>());
         Sheet dataSheet = this.fileOpenerHelper(file);
         List<String> citta = this.scuolaService.getCitta();
         Iterator<Row> iterator = dataSheet.rowIterator();
@@ -353,7 +380,7 @@ public class SimpleAttivitaService implements AttivitaService {
     //file informaticaopenday13luglio.xlsx
     @Override
     public void uploadScuoleA(MultipartFile file) {
-        Attivita attivita = new Attivita("OpenDayLuglio2023","OPEN_DAY_UNICAM", 4045, new ArrayList<>());
+        Attivita attivita = new Attivita("OPEN_DAY_UNICAM_4045","OPEN_DAY_UNICAM", 4045, new ArrayList<>());
         Sheet dataSheet = this.fileOpenerHelper(file);
         List<String> citta = this.scuolaService.getCitta();
         Iterator<Row> iterator = dataSheet.rowIterator();
@@ -383,7 +410,7 @@ public class SimpleAttivitaService implements AttivitaService {
     //file  informaticalabaperti27luglio.xlsx
     @Override
     public void uploadLabOpen(MultipartFile file) {
-        Attivita attivita = new Attivita("LabApertiLuglio2023","LABORATORI_APERTI_UNICAM", 4045, new ArrayList<>());
+        Attivita attivita = new Attivita("LABORATORI_APERTI_UNICAM_4045","LABORATORI_APERTI_UNICAM", 4045, new ArrayList<>());
         Sheet dataSheet = this.fileOpenerHelper(file);
         List<String> citta = this.scuolaService.getCitta();
         Iterator<Row> iterator = dataSheet.rowIterator();
@@ -408,22 +435,41 @@ public class SimpleAttivitaService implements AttivitaService {
 
     @Override
     public void uploadGenerico(MultipartFile file, String nome) {
-        System.out.println(nome);
-        System.out.println(file.getOriginalFilename());
+        Date date =new Date();
+        int mese =date.getMonth();
+        int data = 0;
+        if(mese>=8){
+            data = ((date.getYear()+1900)*2)+1;
+        }else{
+            data = ((date.getYear()+1900)*2)-1;
+        }
+        String nomeAtt = nome+data;
+        Attivita attivita = new Attivita(nomeAtt,nome, data, new ArrayList<>());
+        List<String> citta = this.scuolaService.getCitta();
         Sheet dataSheet = this.fileOpenerHelper(file);
         Iterator<Row> iterator = dataSheet.rowIterator();
-        int ncolonna= 0;
         while (iterator.hasNext()){
             Row row = iterator.next();
-            System.out.println(row.getCell(1).getStringCellValue());
+            String c = row.getCell(3).getStringCellValue().toUpperCase();
+            String trovata = this.stringFinderHelper.findMostSimilarString(c,citta);
+            List<String> nomi = this.scuolaService.getNomi(trovata);
+            String s =row.getCell(2).getStringCellValue();
+            String sT= this.stringFinderHelper.findMostSimilarString(s,nomi);
+            Scuola scuola = scuolaRepository.getScuolaByCittaAndNome(trovata,sT);
+            String nom = row.getCell(0).getStringCellValue();
+            String cognome = row.getCell(1).getStringCellValue();
+            String id = nom + cognome + scuola.getNome();
+            Studente stud = new Studente(id, nom, cognome, scuola);
+            attivita.getStudPartecipanti().add(stud);
         }
+        System.out.println(this.save(attivita));
     }
 
 
     // file PAU 2023 - Informatica.xlsx
     @Override
     public void uploadPau23(MultipartFile file) {
-        Attivita attivita = new Attivita("Porte_Aperte_Unicam_4045","PORTE_APERTE_UNICAM", 4045, new ArrayList<>());
+        Attivita attivita = new Attivita("PORTE_APERTE_UNICAM_4045","PORTE_APERTE_UNICAM", 4045, new ArrayList<>());
         Sheet dataSheet = this.fileOpenerHelper(file);
         List<String> citta = this.scuolaService.getCitta();
         Iterator<Row> iterator = dataSheet.rowIterator();
@@ -457,7 +503,7 @@ public class SimpleAttivitaService implements AttivitaService {
 
     @Override
     public void uploaedContest23(MultipartFile file) {
-        Attivita attivita = new Attivita("Contest_Informatica_X_Gioco_4045","CONTEST_INFORMATICA_X_GIOCO", 4045, new ArrayList<>());
+        Attivita attivita = new Attivita("CONTEST_INFORMATICA_X_GIOCO_4045","CONTEST_INFORMATICA_X_GIOCO", 4045, new ArrayList<>());
         Sheet dataSheet = this.fileOpenerHelper(file);
         List<String> citta = this.scuolaService.getCitta();
         Iterator<Row> iterator = dataSheet.rowIterator();
@@ -489,6 +535,31 @@ public class SimpleAttivitaService implements AttivitaService {
         System.out.println(this.save(attivita));
     }
 
+    @Override
+    public void uploadRecanati23(MultipartFile file) {
+        Attivita attivita = new Attivita("PCTO_RECNATI_4045","PCTO_RECNATI", 4045, new ArrayList<>());
+        Sheet dataSheet = this.fileOpenerHelper(file);
+        List<String> citta = this.scuolaService.getCitta();
+        Iterator<Row> iterator = dataSheet.rowIterator();
+        while (iterator.hasNext()){
+            Row row = iterator.next();
+            String c = row.getCell(3).getStringCellValue().toUpperCase();
+            String trovata = this.stringFinderHelper.findMostSimilarString(c,citta);
+            List<String> nomi = this.scuolaService.getNomi(trovata);
+            String s =row.getCell(2).getStringCellValue();
+            String sT= this.stringFinderHelper.findMostSimilarString(s,nomi);
+            System.out.println("Data: "+s+" Trovata: "+sT);
+            Scuola scuola = scuolaRepository.getScuolaByCittaAndNome(trovata,sT);
+            String nome = row.getCell(0).getStringCellValue();
+            String cognome = row.getCell(1).getStringCellValue();
+            String id = nome + cognome + scuola.getNome();
+            Studente stud = new Studente(id, nome, cognome, scuola);
+            attivita.getStudPartecipanti().add(stud);
+        }
+        System.out.println(this.save(attivita));
+
+    }
+
 
     /**
      * Find information about students that chose UNICAM and their high school, given an activity.
@@ -502,7 +573,7 @@ public class SimpleAttivitaService implements AttivitaService {
         Attivita activity = this.attivitaRepository.findByNome(activityName);
         System.out.println(activity.getNome());
         System.out.println("prova");
-        if(activity.getNome().equals("InformaticaXGioco")){
+        if(activity.getNome().equals("CONTEST_INFORMATICA_X_GIOCO_4043")){
             System.out.println("qua");
             activity.getStudPartecipanti().forEach(s -> {
                 List<Iscrizioni> i = this.universitarioService.getIscrizioniAnno(4047);

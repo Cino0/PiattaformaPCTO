@@ -5,6 +5,7 @@ import com.example.PiattaformaPCTO_v2.dto.ActivityViewDTOPair;
 import com.example.PiattaformaPCTO_v2.service.AttivitaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,13 +40,18 @@ public class AttivitaController {
         attivitaService.uploadCartel();
     }
 
+    @PostMapping("/mont")
+    public  void uploadMontani(@RequestParam("file")MultipartFile file){
+        attivitaService.uploadMontani(file);
+    }
+
     @PostMapping("/n")
     public void uploadOpen(@RequestParam("file") MultipartFile file) {
         attivitaService.uploadOpen(file);
     }
 
 
-    @PostMapping("/g")
+    @PostMapping("/gioco")
     public void uploadGioco(@RequestParam("file") MultipartFile file) {
         attivitaService.uploadGioco(file);
     }
@@ -103,8 +109,12 @@ public class AttivitaController {
     @PostMapping("/cont")
     public void uploadContest(@RequestParam("file")MultipartFile file){attivitaService.uploaedContest23(file);}
 
+    @PostMapping("/recanati")
+    public void uploadRecanati23(@RequestParam("file")MultipartFile file){attivitaService.uploadRecanati23(file);}
+
 
     @GetMapping("/prova")
     void prova(){attivitaService.prova();}
+
 
 }

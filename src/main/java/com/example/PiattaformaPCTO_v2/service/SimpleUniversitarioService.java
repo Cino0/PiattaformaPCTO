@@ -43,27 +43,28 @@ public class SimpleUniversitarioService implements UniversitarioService {
     @Override
     public String upload(MultipartFile file) {
         LocalDate date = LocalDate.now();
+        System.out.println(file.getOriginalFilename());
         Iscrizioni i = new Iscrizioni((date.getYear()*2)+1);
         Sheet dataSheet = this.fileOpenerHelper(file);
         Iterator<Row> iterator = dataSheet.rowIterator();
         iterator.next();
         while (iterator.hasNext()){
             Row row = iterator.next();
-            double matr= row.getCell(4).getNumericCellValue();
+            double matr= row.getCell(1).getNumericCellValue();
             String m = String.valueOf(matr).replaceAll("[0]*$", "").replaceAll(".$", "");
-            String nome = row.getCell(5).getStringCellValue();
-            String cognome = row.getCell(6).getStringCellValue();
-            if (row.getCell(9)!=null){
-                String comune = row.getCell(9).getStringCellValue().toUpperCase();
-                String scuola = row.getCell(8).getStringCellValue();
-                String corso = row.getCell(1).getStringCellValue();
-                Universitario universitario = new Universitario(m,nome,cognome,date.getYear(),corso,comune,scuola);
+            String nome = row.getCell(2).getStringCellValue();
+            String cognome = row.getCell(3).getStringCellValue();
+            if (row.getCell(5)!=null){
+                String comune = row.getCell(5).getStringCellValue().toUpperCase();
+                String scuola = row.getCell(4).getStringCellValue();
+                String corso = row.getCell(0).getStringCellValue();
+                Universitario universitario = new Universitario(m,nome,cognome,4047,corso,comune,scuola);
                 System.out.println(universitario.toString());
                 i.addUniversitario(universitario);
             }
         }
         this.iscrizioniRepository.save(i);
-        return null;
+        return "caricati";
     }
 
     @Override

@@ -40,12 +40,16 @@ public class SimpleRisultatiService implements RisultatiService {
 
     @Override
     public void crea() {
+        int inizio=0;
         //Ottengo la lista di tutte le attività, da migliorare filtrando con l'anno accademico di svolgimento
         List<Attivita> attivita = this.attivitaService.getAttivita(4047);
+        if(attivita.get(0).getNome().equals("CONTEST_INFORMATICA_X_GIOCO_4043")){
+            inizio++;
+        }
         //Creo una lista vuota per contenere tutti i risultati
         List<Risultati> r = new ArrayList<>();
         //Scorro la lista delle attività presenti, da miglirare anche con un for each
-        for (int i=0;i<attivita.size()-1;i++){
+        for (int i=inizio;i<attivita.size();i++){
             //ottengo il nome dell'attività
             String nome= attivita.get(i).getNome();
             // dalla singola attività ottengo la lista degli studenti partecipanti
@@ -107,7 +111,9 @@ public class SimpleRisultatiService implements RisultatiService {
                 }
             }
         }
-        risultatiInf(attivita,r);
+        if(attivita.get(0).getAnnoAcc()==4043){
+            risultatiInf(attivita,r);
+        }
         this.risultatiRepository.saveAll(r);
     }
 
@@ -158,44 +164,51 @@ public class SimpleRisultatiService implements RisultatiService {
 
     @Override
     public void risultatiInf(List<Attivita> attivita, List<Risultati> r) {
-        Attivita att = attivita.get(4);
-        String nome = att.getNome();
-        for (Studente s : att.getStudPartecipanti()){
-            Universitario uni = universitarioRepository.findByNomeAndCognome(s.getNome().toUpperCase(),s.getCognome().toUpperCase());
-            List<Iscrizioni> i = this.universitarioService.getIscrizioniAnno(2022);
-            for (Universitario u :i.get(0).getUniversitari()){
-                if (u.getNome().equals(s.getNome().toUpperCase())){
-                    if (u.getCognome().equals(s.getCognome().toUpperCase())){
-                        Scuola scuola = findScuola(u.getComuneScuola(), u.getScuolaProv());
-                        s.setScuola(scuola);
-                        int index=this.scuoleHelperd(r,scuola.getIdScuola());
-                        if (index!=-1){
-                            int a=this.attivitaHelper(r.get(index).getAttivita(),nome);
-                            if (a!=-1){
-                                r.get(index).getAttivita().get(a).getPartecipanti().add(s);
-                                r.get(index).getAttivita().get(a).nuovoIscritto(s);
-                                if(this.studenteHelper(r,s)==0){
-                                    r.get(index).nuovoIscritto(u);
-                                }
-                            }else{
-                                System.out.println(" "+r.get(index).getAttivita().get(0).getIscritti().size());
-                                Presenza p = new Presenza(nome);
-                                p.getPartecipanti().add(s);
-                                p.nuovoIscritto(s);
-                                r.get(index).getAttivita().add(p);
-                                System.out.println("Dopo "+r.get(index).getAttivita().get(0).getIscritti().size());
-                                if (this.studenteHelper(r,s)==0){
-                                    r.get(index).nuovoIscritto(u);
+        Attivita att;
+        for(Attivita at:attivita) {
+            if (at.getNome().equals("CONTEST_INFORMATICA_X_GIOCO_4043")) {
+                att = at;
+                String nome = att.getNome();
+                for (Studente s : att.getStudPartecipanti()){
+                    Universitario uni = universitarioRepository.findByNomeAndCognome(s.getNome().toUpperCase(),s.getCognome().toUpperCase());
+                    List<Iscrizioni> i = this.universitarioService.getIscrizioniAnno(4047);
+                    for (Universitario u :i.get(0).getUniversitari()){
+                        if (u.getNome().equals(s.getNome().toUpperCase())){
+                            if (u.getCognome().equals(s.getCognome().toUpperCase())){
+                                System.out.println(u);
+                                Scuola scuola = findScuola(u.getComuneScuola(), u.getScuolaProv());
+                                s.setScuola(scuola);
+                                System.out.println("sono nel metodo brutto"+s.getScuola());
+                                int index=this.scuoleHelperd(r,scuola.getIdScuola());
+                                if (index!=-1){
+                                    int a=this.attivitaHelper(r.get(index).getAttivita(),nome);
+                                    if (a!=-1){
+                                        r.get(index).getAttivita().get(a).getPartecipanti().add(s);
+                                        r.get(index).getAttivita().get(a).nuovoIscritto(s);
+                                        if(this.studenteHelper(r,s)==0){
+                                            r.get(index).nuovoIscritto(u);
+                                        }
+                                    }else{
+                                        System.out.println(" "+r.get(index).getAttivita().get(0).getIscritti().size());
+                                        Presenza p = new Presenza(nome);
+                                        p.getPartecipanti().add(s);
+                                        p.nuovoIscritto(s);
+                                        r.get(index).getAttivita().add(p);
+                                        System.out.println("Dopo "+r.get(index).getAttivita().get(0).getIscritti().size());
+                                        if (this.studenteHelper(r,s)==0){
+                                            r.get(index).nuovoIscritto(u);
+                                        }
+                                    }
+                                }else{
+                                    Presenza p = new Presenza(nome);
+                                    Risultati res = new Risultati(4047,scuola);
+                                    p.getPartecipanti().add(s);
+                                    p.nuovoIscritto(s);
+                                    res.getAttivita().add(p);
+                                    res.nuovoIscritto(u);
+                                    r.add(res);
                                 }
                             }
-                        }else{
-                            Presenza p = new Presenza(nome);
-                            Risultati res = new Risultati(4043,scuola);
-                            p.getPartecipanti().add(s);
-                            p.nuovoIscritto(s);
-                            res.getAttivita().add(p);
-                            res.nuovoIscritto(u);
-                            r.add(res);
                         }
                     }
                 }
